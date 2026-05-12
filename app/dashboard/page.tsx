@@ -87,7 +87,6 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-6">
 
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             Dashboard
@@ -98,7 +97,6 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* KPI ROW 1 */}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
 
           <KPICard
@@ -138,7 +136,6 @@ export default async function DashboardPage() {
 
         </div>
 
-        {/* KPI ROW 2 */}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
 
           <KPICard
@@ -183,7 +180,6 @@ export default async function DashboardPage() {
 
         </div>
 
-        {/* Charts Row 1 */}
         <div className="grid gap-4 lg:grid-cols-2">
 
           <TrendAreaChart
@@ -204,7 +200,6 @@ export default async function DashboardPage() {
 
         </div>
 
-        {/* Charts Row 2 */}
         <div className="grid gap-4 lg:grid-cols-2">
 
           <TrendAreaChart
@@ -225,7 +220,6 @@ export default async function DashboardPage() {
 
         </div>
 
-        {/* Charts Row 3 */}
         <div className="grid gap-4 lg:grid-cols-2">
 
           <DonutChart
@@ -243,10 +237,8 @@ export default async function DashboardPage() {
 
         </div>
 
-        {/* Bottom Section */}
         <div className="grid gap-4 lg:grid-cols-2">
 
-          {/* Recent Jobs */}
           <Card>
 
             <CardHeader>
@@ -272,7 +264,9 @@ export default async function DashboardPage() {
                       </p>
 
                       <p className="text-xs text-muted-foreground">
-                        {(job.companies as { name: string })?.name || 'Unknown Company'}
+                        {Array.isArray(job.companies)
+                          ? job.companies[0]?.name || 'Unknown Company'
+                          : (job.companies as { name?: string } | null)?.name || 'Unknown Company'}
                       </p>
 
                     </div>
@@ -312,7 +306,6 @@ export default async function DashboardPage() {
 
           </Card>
 
-          {/* Platform Overview */}
           <Card>
 
             <CardHeader>
