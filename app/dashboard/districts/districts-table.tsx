@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Search, MoreHorizontal, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
-import { District } from "@/lib/services/districts"
+import type { District } from "@/lib/services/districts"
 import { toggleDistrictStatus } from "./actions"
 
 interface DistrictsTableProps {
