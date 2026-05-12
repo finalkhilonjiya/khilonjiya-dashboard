@@ -1,23 +1,30 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Area,
   AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
   Line,
   LineChart,
   Pie,
   PieChart,
-  Cell,
   ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
 } from 'recharts'
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 const COLORS = [
   'hsl(var(--chart-1))',
@@ -27,22 +34,65 @@ const COLORS = [
   'hsl(var(--chart-5))',
 ]
 
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      day: 'numeric',
+    }
+  )
+}
+
+function formatFullDate(value: string) {
+  return new Date(value).toLocaleDateString(
+    'en-US',
+    {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }
+  )
+}
+
+const tooltipStyle = {
+  backgroundColor: 'hsl(var(--card))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: '12px',
+}
+
 interface ChartCardProps {
   title: string
   description?: string
   children: React.ReactNode
 }
 
-function ChartCard({ title, description, children }: ChartCardProps) {
+function ChartCard({
+  title,
+  description,
+  children,
+}: ChartCardProps) {
   return (
     <Card>
+
       <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
+
+        <CardTitle className="text-base">
+          {title}
+        </CardTitle>
+
         {description && (
-          <CardDescription>{description}</CardDescription>
+          <CardDescription>
+            {description}
+          </CardDescription>
         )}
+
       </CardHeader>
-      <CardContent>{children}</CardContent>
+
+      <CardContent>
+        {children}
+      </CardContent>
+
     </Card>
   )
 }
@@ -50,87 +100,166 @@ function ChartCard({ title, description, children }: ChartCardProps) {
 interface TrendChartProps {
   title: string
   description?: string
-  data: Array<{ date: string; [key: string]: string | number }>
+  data: Array<{
+    date: string
+    [key: string]: string | number
+  }>
   dataKey: string
   color?: string
 }
 
-export function TrendAreaChart({ title, description, data, dataKey, color = 'hsl(var(--chart-1))' }: TrendChartProps) {
+export function TrendAreaChart({
+  title,
+  description,
+  data,
+  dataKey,
+  color = 'hsl(var(--chart-1))',
+}: TrendChartProps) {
   return (
-    <ChartCard title={title} description={description}>
-      <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
+    <ChartCard
+      title={title}
+      description={description}
+    >
+
+      <div className="h-[240px]">
+
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+
           <AreaChart data={data}>
+
             <defs>
-              <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={color} stopOpacity={0} />
+
+              <linearGradient
+                id={`gradient-${dataKey}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+
+                <stop
+                  offset="5%"
+                  stopColor={color}
+                  stopOpacity={0.3}
+                />
+
+                <stop
+                  offset="95%"
+                  stopColor={color}
+                  stopOpacity={0}
+                />
+
               </linearGradient>
+
             </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={formatDate}
               className="text-xs"
               tickLine={false}
               axisLine={false}
             />
-            <YAxis className="text-xs" tickLine={false} axisLine={false} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+
+            <YAxis
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
             />
+
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelFormatter={formatFullDate}
+            />
+
             <Area
               type="monotone"
               dataKey={dataKey}
               stroke={color}
               fill={`url(#gradient-${dataKey})`}
               strokeWidth={2}
+              isAnimationActive={false}
             />
+
           </AreaChart>
+
         </ResponsiveContainer>
+
       </div>
+
     </ChartCard>
   )
 }
 
-export function TrendLineChart({ title, description, data, dataKey, color = 'hsl(var(--chart-2))' }: TrendChartProps) {
+export function TrendLineChart({
+  title,
+  description,
+  data,
+  dataKey,
+  color = 'hsl(var(--chart-2))',
+}: TrendChartProps) {
   return (
-    <ChartCard title={title} description={description}>
-      <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
+    <ChartCard
+      title={title}
+      description={description}
+    >
+
+      <div className="h-[240px]">
+
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={formatDate}
               className="text-xs"
               tickLine={false}
               axisLine={false}
             />
-            <YAxis className="text-xs" tickLine={false} axisLine={false} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+
+            <YAxis
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
             />
+
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelFormatter={formatFullDate}
+            />
+
             <Line
               type="monotone"
               dataKey={dataKey}
               stroke={color}
               strokeWidth={2}
               dot={false}
+              isAnimationActive={false}
             />
+
           </LineChart>
+
         </ResponsiveContainer>
+
       </div>
+
     </ChartCard>
   )
 }
@@ -138,37 +267,73 @@ export function TrendLineChart({ title, description, data, dataKey, color = 'hsl
 interface BarChartProps {
   title: string
   description?: string
-  data: Array<{ name: string; [key: string]: string | number }>
+  data: Array<{
+    name: string
+    [key: string]: string | number
+  }>
   dataKey: string
 }
 
-export function HorizontalBarChart({ title, description, data, dataKey }: BarChartProps) {
+export function HorizontalBarChart({
+  title,
+  description,
+  data,
+  dataKey,
+}: BarChartProps) {
   return (
-    <ChartCard title={title} description={description}>
-      <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis type="number" className="text-xs" tickLine={false} axisLine={false} />
-            <YAxis
-              type="category"
-              dataKey="name"
+    <ChartCard
+      title={title}
+      description={description}
+    >
+
+      <div className="h-[320px]">
+
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+
+          <BarChart
+            data={data}
+            layout="vertical"
+          >
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
+            <XAxis
+              type="number"
               className="text-xs"
               tickLine={false}
               axisLine={false}
+            />
+
+            <YAxis
+              type="category"
+              dataKey="name"
               width={100}
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
+
+            <Tooltip contentStyle={tooltipStyle} />
+
+            <Bar
+              dataKey={dataKey}
+              fill="hsl(var(--chart-1))"
+              radius={[0, 6, 6, 0]}
+              isAnimationActive={false}
             />
-            <Bar dataKey={dataKey} fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+
           </BarChart>
+
         </ResponsiveContainer>
+
       </div>
+
     </ChartCard>
   )
 }
@@ -176,15 +341,32 @@ export function HorizontalBarChart({ title, description, data, dataKey }: BarCha
 interface PieChartProps {
   title: string
   description?: string
-  data: Array<{ name: string; value: number }>
+  data: Array<{
+    name: string
+    value: number
+  }>
 }
 
-export function DonutChart({ title, description, data }: PieChartProps) {
+export function DonutChart({
+  title,
+  description,
+  data,
+}: PieChartProps) {
   return (
-    <ChartCard title={title} description={description}>
-      <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
+    <ChartCard
+      title={title}
+      description={description}
+    >
+
+      <div className="h-[320px]">
+
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+
           <PieChart>
+
             <Pie
               data={data}
               cx="50%"
@@ -193,27 +375,32 @@ export function DonutChart({ title, description, data }: PieChartProps) {
               outerRadius={100}
               paddingAngle={2}
               dataKey="value"
+              isAnimationActive={false}
             >
+
               {data.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell
+                  key={index}
+                  fill={COLORS[index % COLORS.length]}
+                />
               ))}
+
             </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
+
+            <Tooltip contentStyle={tooltipStyle} />
+
+            <Legend
+              wrapperStyle={{
+                fontSize: '12px',
               }}
             />
-            <Legend
-              layout="vertical"
-              align="right"
-              verticalAlign="middle"
-              formatter={(value) => <span className="text-xs text-foreground">{value}</span>}
-            />
+
           </PieChart>
+
         </ResponsiveContainer>
+
       </div>
+
     </ChartCard>
   )
 }
@@ -222,33 +409,60 @@ interface MultiLineChartProps {
   title: string
   description?: string
   data: Array<Record<string, string | number>>
-  lines: Array<{ dataKey: string; color: string; name: string }>
+  lines: Array<{
+    dataKey: string
+    color: string
+    name: string
+  }>
 }
 
-export function MultiLineChart({ title, description, data, lines }: MultiLineChartProps) {
+export function MultiLineChart({
+  title,
+  description,
+  data,
+  lines,
+}: MultiLineChartProps) {
   return (
-    <ChartCard title={title} description={description}>
-      <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
+    <ChartCard
+      title={title}
+      description={description}
+    >
+
+      <div className="h-[320px]">
+
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
+
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={formatDate}
               className="text-xs"
               tickLine={false}
               axisLine={false}
             />
-            <YAxis className="text-xs" tickLine={false} axisLine={false} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+
+            <YAxis
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
             />
+
+            <Tooltip
+              contentStyle={tooltipStyle}
+              labelFormatter={formatFullDate}
+            />
+
             <Legend />
+
             {lines.map((line) => (
               <Line
                 key={line.dataKey}
@@ -258,11 +472,16 @@ export function MultiLineChart({ title, description, data, lines }: MultiLineCha
                 stroke={line.color}
                 strokeWidth={2}
                 dot={false}
+                isAnimationActive={false}
               />
             ))}
+
           </LineChart>
+
         </ResponsiveContainer>
+
       </div>
+
     </ChartCard>
   )
 }
