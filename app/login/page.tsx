@@ -19,26 +19,62 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
   const router = useRouter()
   const searchParams = useSearchParams()
+
   const authError = searchParams.get('error')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+
     const supabase = createClient()
+
     setIsLoading(true)
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      if (error) throw error
+
+      if (error) {
+        throw error
+      }
+
+      if (!data.user) {
+        throw new Error('Authentication failed')
+      }
+
+      // Verify admin role
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileError || !profile) {
+        await supabase.auth.signOut()
+        throw new Error('Profile not found')
+      }
+
+      const allowedRoles = ['admin', 'super_admin']
+
+      if (!allowedRoles.includes(profile.role)) {
+        await supabase.auth.signOut()
+        throw new Error('Unauthorized access')
+      }
+
       router.push('/dashboard')
       router.refresh()
+
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'An error occurred'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -48,7 +84,7 @@ function LoginForm() {
     <div className="flex min-h-svh w-full items-center justify-center bg-muted/30 p-6 md:p-10">
       <div className="w-full max-w-md">
         <Card className="border-0 shadow-2xl">
-          <CardHeader className="space-y-4 text-center pb-8">
+          <CardHeader className="space-y-4 pb-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -65,17 +101,26 @@ function LoginForm() {
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
+
             <div>
-              <CardTitle className="text-2xl font-bold">Khilonjiya Dashboard</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                Khilonjiya Dashboard
+              </CardTitle>
+
               <CardDescription className="mt-2 text-muted-foreground">
                 Sign in to access the admin dashboard
               </CardDescription>
             </div>
           </CardHeader>
+
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
+
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">
+                  Email
+                </Label>
+
                 <Input
                   id="email"
                   type="email"
@@ -86,8 +131,12 @@ function LoginForm() {
                   className="h-11"
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">
+                  Password
+                </Label>
+
                 <Input
                   id="password"
                   type="password"
@@ -97,17 +146,25 @@ function LoginForm() {
                   className="h-11"
                 />
               </div>
+
               {(error || authError) && (
-                <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                   {error || 'Authentication failed. Please try again.'}
-                </p>
+                </div>
               )}
-              <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
+
+              <Button
+                type="submit"
+                className="h-11 w-full text-base"
+                disabled={isLoading}
+              >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </Button>
+
             </form>
           </CardContent>
         </Card>
+
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Khilonjiya Admin Portal - Secure Access Only
         </p>
@@ -118,11 +175,15 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-svh w-full items-center justify-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh w-full items-center justify-center">
+          <div className="animate-pulse">
+            Loading...
+          </div>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   )
