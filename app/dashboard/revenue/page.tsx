@@ -1,12 +1,4 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-
-import {
-  getRevenueStats,
-  getTransactions,
-  getMonthlyRevenueTrend,
-} from '@/lib/services/revenue'
+import { getRevenueStats, getTransactions, getMonthlyRevenueTrend } from '@/lib/services/revenue'
 
 import { KPICard } from '@/components/dashboard/kpi-card'
 
@@ -28,15 +20,7 @@ import {
 
 import { format } from 'date-fns'
 
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from 'recharts'
+import RevenueChart from './revenue-chart'
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -46,83 +30,30 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
-interface Transaction {
-  id: string
-  amount_inr: number
-  status: string
-  plan_key: string
-  created_at: string
-  user_profiles:
-    | {
-        full_name: string | null
-        email: string | null
-      }
-    | {
-        full_name: string | null
-        email: string | null
-      }[]
-    | null
+interface PageProps {
+  searchParams: Promise<{
+    page?: string
+  }>
 }
 
-interface RevenueStats {
-  revenueMTD: number
-  revenueLastMonth: number
-  activeSubscriptions: number
-  totalTransactions: number
-  growthPercent: number
-}
+export default async function RevenuePage({
+  searchParams,
+}: PageProps) {
 
-interface RevenueTrend {
-  month: string
-  revenue: number
-}
+  const params = await searchParams
 
-export default function RevenuePage() {
-  const [stats, setStats] = useState<RevenueStats | null>(null)
+  const page = parseInt(params.page || '1')
 
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-
-  const [revenueTrend, setRevenueTrend] = useState<RevenueTrend[]>([])
-
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [statsData, transactionData, trendData] =
-          await Promise.all([
-            getRevenueStats(),
-            getTransactions(1, 10),
-            getMonthlyRevenueTrend(6),
-          ])
-
-        setStats(statsData)
-        setTransactions(transactionData.transactions || [])
-        setRevenueTrend(trendData || [])
-      } catch (error) {
-        console.error('Revenue Page Error:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadData()
-  }, [])
-
-  if (loading || !stats) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-muted-foreground">
-          Loading revenue dashboard...
-        </p>
-      </div>
-    )
-  }
+  const [stats, { transactions }, revenueTrend] =
+    await Promise.all([
+      getRevenueStats(),
+      getTransactions(page, 10),
+      getMonthlyRevenueTrend(6),
+    ])
 
   return (
     <div className="space-y-6">
 
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
           Revenue & Payments
@@ -133,7 +64,6 @@ export default function RevenuePage() {
         </p>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
         <KPICard
@@ -174,73 +104,8 @@ export default function RevenuePage() {
 
       </div>
 
-      {/* Revenue Chart */}
-      <Card>
+      <RevenueChart revenueTrend={revenueTrend} />
 
-        <CardHeader>
-          <CardTitle>
-            Monthly Revenue
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
-
-          <div className="h-[300px]">
-
-            <ResponsiveContainer width="100%" height="100%">
-
-              <BarChart data={revenueTrend}>
-
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  className="stroke-muted"
-                />
-
-                <XAxis
-                  dataKey="month"
-                  className="text-xs"
-                  tickLine={false}
-                  axisLine={false}
-                />
-
-                <YAxis
-                  className="text-xs"
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) =>
-                    `${(value / 1000).toFixed(0)}K`
-                  }
-                />
-
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number) => [
-                    formatCurrency(value),
-                    'Revenue',
-                  ]}
-                />
-
-                <Bar
-                  dataKey="revenue"
-                  fill="hsl(var(--chart-1))"
-                  radius={[4, 4, 0, 0]}
-                />
-
-              </BarChart>
-
-            </ResponsiveContainer>
-
-          </div>
-
-        </CardContent>
-
-      </Card>
-
-      {/* Transactions */}
       <Card>
 
         <CardHeader>
