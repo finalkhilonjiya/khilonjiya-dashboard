@@ -1,10 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+
 import {
   LayoutDashboard,
   Briefcase,
@@ -22,10 +32,8 @@ import {
   ChevronRight,
   TrendingUp,
   Search,
+  Menu,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -43,30 +51,27 @@ const navigation = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
-export function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
-  }
-
+function SidebarContent({
+  isCollapsed,
+  pathname,
+  onLogout,
+}: {
+  isCollapsed: boolean
+  pathname: string
+  onLogout: () => Promise<void>
+}) {
   return (
-    <div
-      className={cn(
-        'relative flex h-screen flex-col border-r bg-sidebar transition-all duration-300',
-        isCollapsed ? 'w-16' : 'w-64'
-      )}
-    >
+    <>
       {/* Header */}
       <div className="flex h-16 items-center border-b px-4">
+
         {!isCollapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2"
+          >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -81,65 +86,203 @@ export function Sidebar() {
                 <path d="M2 17l10 5 10-5" />
                 <path d="M2 12l10 5 10-5" />
               </svg>
+
             </div>
-            <span className="font-semibold text-sidebar-foreground">Khilonjiya</span>
+
+            <span className="font-semibold text-sidebar-foreground">
+              Khilonjiya
+            </span>
           </Link>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn('ml-auto h-8 w-8', isCollapsed && 'mx-auto')}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+
       </div>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-2 py-4">
+
         <nav className="flex flex-col gap-1">
+
           {navigation.map((item) => {
-            const isActive = pathname === item.href || 
-              (item.href !== '/dashboard' && pathname.startsWith(item.href))
+            const isActive =
+              pathname === item.href ||
+              (
+                item.href !== '/dashboard' &&
+                pathname.startsWith(item.href)
+              )
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                title={isCollapsed ? item.name : undefined}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
                   isCollapsed && 'justify-center px-2'
                 )}
-                title={isCollapsed ? item.name : undefined}
               >
+
                 <item.icon className="h-4 w-4 shrink-0" />
-                {!isCollapsed && <span>{item.name}</span>}
+
+                {!isCollapsed && (
+                  <span>{item.name}</span>
+                )}
+
               </Link>
             )
           })}
+
         </nav>
+
       </ScrollArea>
 
       {/* Footer */}
       <div className="border-t p-2">
+
         <Button
           variant="ghost"
           className={cn(
             'w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive',
             isCollapsed && 'justify-center px-2'
           )}
-          onClick={handleLogout}
+          onClick={onLogout}
         >
+
           <LogOut className="h-4 w-4" />
-          {!isCollapsed && <span>Logout</span>}
+
+          {!isCollapsed && (
+            <span>Logout</span>
+          )}
+
         </Button>
+
       </div>
-    </div>
+    </>
+  )
+}
+
+export function Sidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebar-collapsed')
+
+    if (stored === 'true') {
+      setIsCollapsed(true)
+    }
+  }, [])
+
+  const toggleSidebar = () => {
+    const next = !isCollapsed
+
+    setIsCollapsed(next)
+
+    localStorage.setItem(
+      'sidebar-collapsed',
+      String(next)
+    )
+  }
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient()
+
+      await supabase.auth.signOut()
+
+      router.push('/login')
+      router.refresh()
+
+    } catch (error) {
+      console.error('Logout Error:', error)
+    }
+  }
+
+  return (
+    <>
+      {/* Mobile Header */}
+      <div className="flex h-14 items-center border-b px-4 md:hidden">
+
+        <Sheet>
+
+          <SheetTrigger asChild>
+
+            <Button
+              variant="ghost"
+              size="icon"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+
+          </SheetTrigger>
+
+          <SheetContent
+            side="left"
+            className="w-72 p-0"
+          >
+
+            <div className="flex h-full flex-col bg-sidebar">
+
+              <SidebarContent
+                isCollapsed={false}
+                pathname={pathname}
+                onLogout={handleLogout}
+              />
+
+            </div>
+
+          </SheetContent>
+
+        </Sheet>
+
+        <div className="ml-3 font-semibold">
+          Khilonjiya Dashboard
+        </div>
+
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={cn(
+          'hidden border-r bg-sidebar transition-all duration-300 md:flex md:flex-col',
+          isCollapsed ? 'md:w-16' : 'md:w-64'
+        )}
+      >
+
+        <div className="flex h-full flex-col">
+
+          <SidebarContent
+            isCollapsed={isCollapsed}
+            pathname={pathname}
+            onLogout={handleLogout}
+          />
+
+          <div className="border-t p-2">
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto flex"
+              onClick={toggleSidebar}
+            >
+
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+
+            </Button>
+
+          </div>
+
+        </div>
+
+      </aside>
+    </>
   )
 }
