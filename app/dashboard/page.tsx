@@ -85,22 +85,23 @@ export default async function DashboardPage() {
     ])
 
     return (
-      <div className="w-full space-y-4 overflow-hidden sm:space-y-6">
+      <div className="w-full max-w-full space-y-4 overflow-x-hidden sm:space-y-6">
 
-        <div>
+        {/* Header */}
+        <div className="min-w-0">
 
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             Dashboard
           </h1>
 
-          <p className="text-sm text-muted-foreground sm:text-base">
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             Welcome back. Here&apos;s an overview of your platform.
           </p>
 
         </div>
 
         {/* KPI ROW 1 */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
 
           <KPICard
             title="Total Users"
@@ -140,7 +141,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* KPI ROW 2 */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
 
           <KPICard
             title="Revenue MTD"
@@ -185,70 +186,82 @@ export default async function DashboardPage() {
         </div>
 
         {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
 
-          <TrendAreaChart
-            title="User Registrations"
-            description="New users over the last 30 days"
-            data={userTrend}
-            dataKey="users"
-            color="hsl(var(--chart-1))"
-          />
+          <div className="min-w-0 overflow-hidden">
+            <TrendAreaChart
+              title="User Registrations"
+              description="New users over the last 30 days"
+              data={userTrend}
+              dataKey="users"
+              color="hsl(var(--chart-1))"
+            />
+          </div>
 
-          <TrendLineChart
-            title="Job Postings"
-            description="Jobs posted over the last 30 days"
-            data={jobTrend}
-            dataKey="jobs"
-            color="hsl(var(--chart-2))"
-          />
+          <div className="min-w-0 overflow-hidden">
+            <TrendLineChart
+              title="Job Postings"
+              description="Jobs posted over the last 30 days"
+              data={jobTrend}
+              dataKey="jobs"
+              color="hsl(var(--chart-2))"
+            />
+          </div>
 
         </div>
 
         {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
 
-          <TrendAreaChart
-            title="Applications"
-            description="Applications over the last 30 days"
-            data={applicationTrend}
-            dataKey="applications"
-            color="hsl(var(--chart-3))"
-          />
+          <div className="min-w-0 overflow-hidden">
+            <TrendAreaChart
+              title="Applications"
+              description="Applications over the last 30 days"
+              data={applicationTrend}
+              dataKey="applications"
+              color="hsl(var(--chart-3))"
+            />
+          </div>
 
-          <TrendLineChart
-            title="Revenue"
-            description="Revenue over the last 30 days"
-            data={revenueTrend}
-            dataKey="revenue"
-            color="hsl(var(--chart-4))"
-          />
+          <div className="min-w-0 overflow-hidden">
+            <TrendLineChart
+              title="Revenue"
+              description="Revenue over the last 30 days"
+              data={revenueTrend}
+              dataKey="revenue"
+              color="hsl(var(--chart-4))"
+            />
+          </div>
 
         </div>
 
         {/* Charts Row 3 */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
 
-          <DonutChart
-            title="Jobs by Category"
-            description="Distribution of active jobs"
-            data={jobsByCategory}
-          />
+          <div className="min-w-0 overflow-hidden">
+            <DonutChart
+              title="Jobs by Category"
+              description="Distribution of active jobs"
+              data={jobsByCategory}
+            />
+          </div>
 
-          <HorizontalBarChart
-            title="Top Districts"
-            description="Districts with highest job listings"
-            data={topDistricts}
-            dataKey="jobs"
-          />
+          <div className="min-w-0 overflow-hidden">
+            <HorizontalBarChart
+              title="Top Districts"
+              description="Districts with highest job listings"
+              data={topDistricts}
+              dataKey="jobs"
+            />
+          </div>
 
         </div>
 
         {/* Bottom Section */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-2">
 
           {/* Recent Jobs */}
-          <Card>
+          <Card className="min-w-0 overflow-hidden">
 
             <CardHeader>
               <CardTitle className="text-base">
@@ -256,7 +269,7 @@ export default async function DashboardPage() {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="overflow-x-auto">
+            <CardContent>
 
               <div className="space-y-3">
 
@@ -266,13 +279,13 @@ export default async function DashboardPage() {
                     className="flex flex-col gap-3 border-b pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
                   >
 
-                    <div className="space-y-1">
+                    <div className="min-w-0 space-y-1">
 
-                      <p className="text-sm font-medium leading-none">
+                      <p className="truncate text-sm font-medium leading-none">
                         {job.job_title}
                       </p>
 
-                      <p className="text-xs text-muted-foreground">
+                      <p className="truncate text-xs text-muted-foreground">
                         {Array.isArray(job.companies)
                           ? job.companies[0]?.name || 'Unknown Company'
                           : (job.companies as { name?: string } | null)?.name || 'Unknown Company'}
@@ -316,7 +329,7 @@ export default async function DashboardPage() {
           </Card>
 
           {/* Platform Overview */}
-          <Card>
+          <Card className="min-w-0 overflow-hidden">
 
             <CardHeader>
               <CardTitle className="text-base">
@@ -324,11 +337,11 @@ export default async function DashboardPage() {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="overflow-x-auto">
+            <CardContent>
 
               <div className="space-y-4">
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Total Employers
                   </span>
@@ -338,7 +351,7 @@ export default async function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Total Companies
                   </span>
@@ -348,7 +361,7 @@ export default async function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Active Job Listings
                   </span>
@@ -358,7 +371,7 @@ export default async function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Applications Today
                   </span>
@@ -368,7 +381,7 @@ export default async function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Active Subscriptions
                   </span>
@@ -378,7 +391,7 @@ export default async function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Pending Reports
                   </span>
@@ -388,7 +401,7 @@ export default async function DashboardPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted-foreground">
                     Construction Requests
                   </span>
