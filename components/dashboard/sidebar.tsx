@@ -210,7 +210,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="flex h-14 items-center border-b px-4 md:hidden">
+      <div className="fixed left-0 top-0 z-50 flex h-14 w-full items-center border-b bg-background px-4 md:hidden">
 
         <Sheet>
 
@@ -227,7 +227,7 @@ export function Sidebar() {
 
           <SheetContent
             side="left"
-            className="w-[280px] p-0"
+            className="w-[280px] max-w-[80vw] p-0"
           >
 
             <div className="flex h-full flex-col bg-sidebar">
