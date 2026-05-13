@@ -1,22 +1,15 @@
-import type { Metadata } from 'next'
-
-import { Geist, Geist_Mono } from 'next/font/google'
-
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
-
-const geistSans = Geist({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-})
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-})
 
 export const metadata: Metadata = {
   title: 'Khilonjiya Dashboard',
-  description: 'Khilonjiya Admin Dashboard',
+  description: 'Admin Dashboard',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -27,15 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
 
-      <body
-        className={`
-          ${geistSans.variable}
-          ${geistMono.variable}
-          min-h-screen bg-background font-sans antialiased
-        `}
-      >
+      <body className="min-h-screen w-full overflow-x-hidden bg-background text-foreground antialiased">
 
-        {children}
+        <div className="min-h-screen w-full overflow-x-hidden">
+          {children}
+        </div>
 
       </body>
 
