@@ -26,6 +26,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+
 import { useState } from 'react'
 
 import {
@@ -63,8 +64,11 @@ export function DataTable<TData, TValue>({
   onExport,
 }: DataTableProps<TData, TValue>) {
 
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [sorting, setSorting] =
+    useState<SortingState>([])
+
+  const [columnFilters, setColumnFilters] =
+    useState<ColumnFiltersState>([])
 
   const isServerPagination =
     pageCount !== undefined &&
@@ -76,47 +80,57 @@ export function DataTable<TData, TValue>({
 
     getCoreRowModel: getCoreRowModel(),
 
-    getPaginationRowModel: isServerPagination
-      ? undefined
-      : getPaginationRowModel(),
+    getPaginationRowModel:
+      isServerPagination
+        ? undefined
+        : getPaginationRowModel(),
 
-    getSortedRowModel: getSortedRowModel(),
+    getSortedRowModel:
+      getSortedRowModel(),
 
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel:
+      getFilteredRowModel(),
 
     onSortingChange: setSorting,
 
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange:
+      setColumnFilters,
 
     state: {
       sorting,
       columnFilters,
     },
 
-    manualPagination: isServerPagination,
+    manualPagination:
+      isServerPagination,
 
     pageCount,
   })
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4 overflow-hidden">
 
-      <div className="flex items-center justify-between gap-4">
+      {/* Top Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
         {searchKey && (
-          <div className="relative max-w-sm">
+          <div className="relative w-full sm:max-w-sm">
 
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
             <Input
               placeholder={searchPlaceholder}
               value={
-                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
+                (table
+                  .getColumn(searchKey)
+                  ?.getFilterValue() as string) ?? ''
               }
               onChange={(event) =>
                 table
                   .getColumn(searchKey)
-                  ?.setFilterValue(event.target.value)
+                  ?.setFilterValue(
+                    event.target.value
+                  )
               }
               className="pl-10"
             />
@@ -129,38 +143,53 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={onExport}
+            className="w-full sm:w-auto"
           >
+
             <Download className="mr-2 h-4 w-4" />
+
             Export CSV
+
           </Button>
         )}
 
       </div>
 
-      <div className="rounded-lg border">
+      {/* Table */}
+      <div className="w-full overflow-x-auto rounded-lg border">
 
-        <Table>
+        <Table className="min-w-[800px]">
 
           <TableHeader>
 
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+            {table
+              .getHeaderGroups()
+              .map((headerGroup) => (
 
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                <TableRow key={headerGroup.id}>
 
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                  {headerGroup.headers.map(
+                    (header) => (
 
-                  </TableHead>
-                ))}
+                      <TableHead
+                        key={header.id}
+                        className="whitespace-nowrap px-3 py-3 text-xs sm:text-sm"
+                      >
 
-              </TableRow>
-            ))}
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef
+                                .header,
+                              header.getContext()
+                            )}
+
+                      </TableHead>
+                    )
+                  )}
+
+                </TableRow>
+              ))}
 
           </TableHeader>
 
@@ -168,25 +197,38 @@ export function DataTable<TData, TValue>({
 
             {table.getRowModel().rows?.length ? (
 
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
+              table
+                .getRowModel()
+                .rows.map((row) => (
 
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                  <TableRow
+                    key={row.id}
+                    data-state={
+                      row.getIsSelected() &&
+                      'selected'
+                    }
+                  >
 
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    {row
+                      .getVisibleCells()
+                      .map((cell) => (
 
-                    </TableCell>
-                  ))}
+                        <TableCell
+                          key={cell.id}
+                          className="px-3 py-3 text-xs sm:text-sm"
+                        >
 
-                </TableRow>
-              ))
+                          {flexRender(
+                            cell.column.columnDef
+                              .cell,
+                            cell.getContext()
+                          )}
+
+                        </TableCell>
+                      ))}
+
+                  </TableRow>
+                ))
 
             ) : (
 
@@ -194,7 +236,7 @@ export function DataTable<TData, TValue>({
 
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-sm"
                 >
                   No results found.
                 </TableCell>
@@ -209,9 +251,10 @@ export function DataTable<TData, TValue>({
 
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Pagination */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-        <div className="text-sm text-muted-foreground">
+        <div className="text-center text-xs text-muted-foreground sm:text-left sm:text-sm">
 
           {totalItems !== undefined ? (
             <>
@@ -219,13 +262,18 @@ export function DataTable<TData, TValue>({
             </>
           ) : (
             <>
-              {table.getFilteredRowModel().rows.length} row(s)
+              {
+                table
+                  .getFilteredRowModel()
+                  .rows.length
+              }{' '}
+              row(s)
             </>
           )}
 
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-1 sm:gap-2">
 
           {isServerPagination ? (
             <>
@@ -233,8 +281,11 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onPageChange?.(1)}
+                onClick={() =>
+                  onPageChange?.(1)
+                }
                 disabled={page === 1}
+                className="h-8 w-8"
               >
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
@@ -242,21 +293,33 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onPageChange?.(page - 1)}
+                onClick={() =>
+                  onPageChange?.(
+                    page - 1
+                  )
+                }
                 disabled={page === 1}
+                className="h-8 w-8"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
-              <span className="text-sm">
+              <span className="min-w-[90px] text-center text-xs sm:text-sm">
                 Page {page} of {pageCount}
               </span>
 
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onPageChange?.(page + 1)}
-                disabled={page === pageCount}
+                onClick={() =>
+                  onPageChange?.(
+                    page + 1
+                  )
+                }
+                disabled={
+                  page === pageCount
+                }
+                className="h-8 w-8"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -264,8 +327,15 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onPageChange?.(pageCount || 1)}
-                disabled={page === pageCount}
+                onClick={() =>
+                  onPageChange?.(
+                    pageCount || 1
+                  )
+                }
+                disabled={
+                  page === pageCount
+                }
+                className="h-8 w-8"
               >
                 <ChevronsRight className="h-4 w-4" />
               </Button>
@@ -277,8 +347,13 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() =>
+                  table.setPageIndex(0)
+                }
+                disabled={
+                  !table.getCanPreviousPage()
+                }
+                className="h-8 w-8"
               >
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
@@ -286,21 +361,37 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() =>
+                  table.previousPage()
+                }
+                disabled={
+                  !table.getCanPreviousPage()
+                }
+                className="h-8 w-8"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
-              <span className="text-sm">
-                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              <span className="min-w-[90px] text-center text-xs sm:text-sm">
+                Page{' '}
+                {
+                  table.getState()
+                    .pagination
+                    .pageIndex + 1
+                }{' '}
+                of {table.getPageCount()}
               </span>
 
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() =>
+                  table.nextPage()
+                }
+                disabled={
+                  !table.getCanNextPage()
+                }
+                className="h-8 w-8"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -309,9 +400,14 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon"
                 onClick={() =>
-                  table.setPageIndex(table.getPageCount() - 1)
+                  table.setPageIndex(
+                    table.getPageCount() - 1
+                  )
                 }
-                disabled={!table.getCanNextPage()}
+                disabled={
+                  !table.getCanNextPage()
+                }
+                className="h-8 w-8"
               >
                 <ChevronsRight className="h-4 w-4" />
               </Button>
