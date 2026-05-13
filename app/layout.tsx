@@ -1,59 +1,35 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
 
-import { Sidebar } from '@/components/dashboard/sidebar'
-import { Header } from '@/components/dashboard/header'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 
-export default async function DashboardLayout({
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'Khilonjiya Dashboard',
+  description: 'Khilonjiya Admin Dashboard',
+}
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    redirect('/login')
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('user_profiles')
-    .select('role, full_name, avatar_url')
-    .eq('id', user.id)
-    .single()
-
-  if (
-    profileError ||
-    !profile ||
-    !['admin', 'super_admin'].includes(profile.role)
-  ) {
-    redirect('/unauthorized')
-  }
-
   return (
-    <div className="flex min-h-screen w-full overflow-hidden bg-background">
+    <html lang="en" suppressHydrationWarning>
 
-      <Sidebar />
+      <body
+        className={`
+          ${GeistSans.variable}
+          ${GeistMono.variable}
+          min-h-screen bg-background font-sans antialiased
+        `}
+      >
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {children}
 
-        <Header
-          user={{
-            ...user,
-            profile,
-          }}
-        />
+      </body>
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-          {children}
-        </main>
-
-      </div>
-
-    </div>
+    </html>
   )
 }
