@@ -1,9 +1,18 @@
 import type { Metadata } from 'next'
 
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import { Geist, Geist_Mono } from 'next/font/google'
 
 import './globals.css'
+
+const geistSans = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
+})
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+})
 
 export const metadata: Metadata = {
   title: 'Khilonjiya Dashboard',
@@ -20,8 +29,8 @@ export default function RootLayout({
 
       <body
         className={`
-          ${GeistSans.variable}
-          ${GeistMono.variable}
+          ${geistSans.variable}
+          ${geistMono.variable}
           min-h-screen bg-background font-sans antialiased
         `}
       >
