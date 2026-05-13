@@ -59,6 +59,7 @@ const tooltipStyle = {
   backgroundColor: 'hsl(var(--card))',
   border: '1px solid hsl(var(--border))',
   borderRadius: '12px',
+  fontSize: '12px',
 }
 
 interface ChartCardProps {
@@ -73,23 +74,23 @@ function ChartCard({
   children,
 }: ChartCardProps) {
   return (
-    <Card>
+    <Card className="overflow-hidden">
 
-      <CardHeader>
+      <CardHeader className="space-y-1 p-4 sm:p-6">
 
-        <CardTitle className="text-base">
+        <CardTitle className="text-sm sm:text-base">
           {title}
         </CardTitle>
 
         {description && (
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             {description}
           </CardDescription>
         )}
 
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="overflow-x-auto p-3 pt-0 sm:p-6 sm:pt-0">
         {children}
       </CardContent>
 
@@ -121,14 +122,22 @@ export function TrendAreaChart({
       description={description}
     >
 
-      <div className="h-[240px]">
+      <div className="h-[220px] w-full sm:h-[240px]">
 
         <ResponsiveContainer
           width="100%"
           height="100%"
         >
 
-          <AreaChart data={data}>
+          <AreaChart
+            data={data}
+            margin={{
+              top: 10,
+              right: 10,
+              left: -20,
+              bottom: 0,
+            }}
+          >
 
             <defs>
 
@@ -164,15 +173,16 @@ export function TrendAreaChart({
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
             />
 
             <YAxis
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
+              width={35}
             />
 
             <Tooltip
@@ -212,14 +222,22 @@ export function TrendLineChart({
       description={description}
     >
 
-      <div className="h-[240px]">
+      <div className="h-[220px] w-full sm:h-[240px]">
 
         <ResponsiveContainer
           width="100%"
           height="100%"
         >
 
-          <LineChart data={data}>
+          <LineChart
+            data={data}
+            margin={{
+              top: 10,
+              right: 10,
+              left: -20,
+              bottom: 0,
+            }}
+          >
 
             <CartesianGrid
               strokeDasharray="3 3"
@@ -229,15 +247,16 @@ export function TrendLineChart({
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
             />
 
             <YAxis
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
+              width={35}
             />
 
             <Tooltip
@@ -286,7 +305,7 @@ export function HorizontalBarChart({
       description={description}
     >
 
-      <div className="h-[320px]">
+      <div className="h-[280px] w-full sm:h-[320px]">
 
         <ResponsiveContainer
           width="100%"
@@ -296,6 +315,12 @@ export function HorizontalBarChart({
           <BarChart
             data={data}
             layout="vertical"
+            margin={{
+              top: 10,
+              right: 10,
+              left: 10,
+              bottom: 0,
+            }}
           >
 
             <CartesianGrid
@@ -305,7 +330,7 @@ export function HorizontalBarChart({
 
             <XAxis
               type="number"
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
             />
@@ -313,8 +338,8 @@ export function HorizontalBarChart({
             <YAxis
               type="category"
               dataKey="name"
-              width={100}
-              className="text-xs"
+              width={80}
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
             />
@@ -358,7 +383,7 @@ export function DonutChart({
       description={description}
     >
 
-      <div className="h-[320px]">
+      <div className="h-[300px] w-full sm:h-[320px]">
 
         <ResponsiveContainer
           width="100%"
@@ -370,9 +395,9 @@ export function DonutChart({
             <Pie
               data={data}
               cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
+              cy="45%"
+              innerRadius={45}
+              outerRadius={80}
               paddingAngle={2}
               dataKey="value"
               isAnimationActive={false}
@@ -391,7 +416,8 @@ export function DonutChart({
 
             <Legend
               wrapperStyle={{
-                fontSize: '12px',
+                fontSize: '11px',
+                paddingTop: '10px',
               }}
             />
 
@@ -428,14 +454,22 @@ export function MultiLineChart({
       description={description}
     >
 
-      <div className="h-[320px]">
+      <div className="h-[280px] w-full sm:h-[320px]">
 
         <ResponsiveContainer
           width="100%"
           height="100%"
         >
 
-          <LineChart data={data}>
+          <LineChart
+            data={data}
+            margin={{
+              top: 10,
+              right: 10,
+              left: -20,
+              bottom: 0,
+            }}
+          >
 
             <CartesianGrid
               strokeDasharray="3 3"
@@ -445,15 +479,16 @@ export function MultiLineChart({
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
             />
 
             <YAxis
-              className="text-xs"
+              className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
+              width={35}
             />
 
             <Tooltip
@@ -461,7 +496,11 @@ export function MultiLineChart({
               labelFormatter={formatFullDate}
             />
 
-            <Legend />
+            <Legend
+              wrapperStyle={{
+                fontSize: '11px',
+              }}
+            />
 
             {lines.map((line) => (
               <Line
