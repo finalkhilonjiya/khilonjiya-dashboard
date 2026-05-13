@@ -1,322 +1,440 @@
-<div className="w-full space-y-4 overflow-hidden sm:space-y-6">
+import {
+  Users,
+  UserCheck,
+  Building2,
+  Briefcase,
+  FileText,
+  CreditCard,
+  Clock,
+  Flag,
+  HardHat,
+  Activity,
+} from 'lucide-react'
 
-  <div>
+import { KPICard } from '@/components/dashboard/kpi-card'
 
-    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-      Dashboard
-    </h1>
+import {
+  TrendAreaChart,
+  TrendLineChart,
+  DonutChart,
+  HorizontalBarChart,
+} from '@/components/dashboard/charts'
 
-    <p className="text-sm text-muted-foreground sm:text-base">
-      Welcome back. Here&apos;s an overview of your platform.
-    </p>
+import {
+  getDashboardStats,
+  getUserRegistrationTrend,
+  getJobPostingTrend,
+  getApplicationsTrend,
+  getRevenueTrend,
+  getJobsByCategory,
+  getTopDistricts,
+  getRecentJobs,
+} from '@/lib/services/dashboard'
 
-  </div>
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
-  {/* KPI ROW 1 */}
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+import { Badge } from '@/components/ui/badge'
 
-    <KPICard
-      title="Total Users"
-      value={formatNumber(stats.totalUsers)}
-      description="Registered users"
-      icon={Users}
-    />
+export const revalidate = 120
 
-    <KPICard
-      title="Active Users"
-      value={formatNumber(stats.activeUsers)}
-      description="Last 7 days"
-      icon={UserCheck}
-    />
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
 
-    <KPICard
-      title="Companies"
-      value={formatNumber(stats.totalCompanies)}
-      description="Registered companies"
-      icon={Building2}
-    />
+function formatNumber(num: number) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M'
+  }
 
-    <KPICard
-      title="Active Jobs"
-      value={formatNumber(stats.activeJobs)}
-      description="Currently live"
-      icon={Briefcase}
-    />
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K'
+  }
 
-    <KPICard
-      title="Applications Today"
-      value={formatNumber(stats.applicationsToday)}
-      description="New applications"
-      icon={FileText}
-    />
+  return num.toString()
+}
 
-  </div>
+export default async function DashboardPage() {
+  try {
+    const [
+      stats,
+      userTrend,
+      jobTrend,
+      applicationTrend,
+      revenueTrend,
+      jobsByCategory,
+      topDistricts,
+      recentJobs,
+    ] = await Promise.all([
+      getDashboardStats(),
+      getUserRegistrationTrend(30),
+      getJobPostingTrend(30),
+      getApplicationsTrend(30),
+      getRevenueTrend(30),
+      getJobsByCategory(),
+      getTopDistricts(),
+      getRecentJobs(5),
+    ])
 
-  {/* KPI ROW 2 */}
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    return (
+      <div className="w-full space-y-4 overflow-hidden sm:space-y-6">
 
-    <KPICard
-      title="Revenue MTD"
-      value={formatCurrency(stats.revenueMTD)}
-      description="Month to date"
-      icon={CreditCard}
-    />
+        <div>
 
-    <KPICard
-      title="Active Subscriptions"
-      value={formatNumber(stats.activeSubscriptions)}
-      description="Paying users"
-      icon={Activity}
-    />
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            Dashboard
+          </h1>
 
-    <KPICard
-      title="Employers"
-      value={formatNumber(stats.totalEmployers)}
-      description="Registered employers"
-      icon={Clock}
-    />
+          <p className="text-sm text-muted-foreground sm:text-base">
+            Welcome back. Here&apos;s an overview of your platform.
+          </p>
 
-    <KPICard
-      title="Pending Reports"
-      value={formatNumber(stats.pendingReports)}
-      description="Needs review"
-      icon={Flag}
-      className={
-        stats.pendingReports > 0
-          ? 'border-amber-500/50'
-          : ''
-      }
-    />
+        </div>
 
-    <KPICard
-      title="Construction Requests"
-      value={formatNumber(stats.pendingConstructionRequests)}
-      description="Pending requests"
-      icon={HardHat}
-    />
+        {/* KPI ROW 1 */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
 
-  </div>
+          <KPICard
+            title="Total Users"
+            value={formatNumber(stats.totalUsers)}
+            description="Registered users"
+            icon={Users}
+          />
 
-  {/* Charts Row 1 */}
-  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <KPICard
+            title="Active Users"
+            value={formatNumber(stats.activeUsers)}
+            description="Last 7 days"
+            icon={UserCheck}
+          />
 
-    <TrendAreaChart
-      title="User Registrations"
-      description="New users over the last 30 days"
-      data={userTrend}
-      dataKey="users"
-      color="hsl(var(--chart-1))"
-    />
+          <KPICard
+            title="Companies"
+            value={formatNumber(stats.totalCompanies)}
+            description="Registered companies"
+            icon={Building2}
+          />
 
-    <TrendLineChart
-      title="Job Postings"
-      description="Jobs posted over the last 30 days"
-      data={jobTrend}
-      dataKey="jobs"
-      color="hsl(var(--chart-2))"
-    />
+          <KPICard
+            title="Active Jobs"
+            value={formatNumber(stats.activeJobs)}
+            description="Currently live"
+            icon={Briefcase}
+          />
 
-  </div>
+          <KPICard
+            title="Applications Today"
+            value={formatNumber(stats.applicationsToday)}
+            description="New applications"
+            icon={FileText}
+          />
 
-  {/* Charts Row 2 */}
-  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        </div>
 
-    <TrendAreaChart
-      title="Applications"
-      description="Applications over the last 30 days"
-      data={applicationTrend}
-      dataKey="applications"
-      color="hsl(var(--chart-3))"
-    />
+        {/* KPI ROW 2 */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
 
-    <TrendLineChart
-      title="Revenue"
-      description="Revenue over the last 30 days"
-      data={revenueTrend}
-      dataKey="revenue"
-      color="hsl(var(--chart-4))"
-    />
+          <KPICard
+            title="Revenue MTD"
+            value={formatCurrency(stats.revenueMTD)}
+            description="Month to date"
+            icon={CreditCard}
+          />
 
-  </div>
+          <KPICard
+            title="Active Subscriptions"
+            value={formatNumber(stats.activeSubscriptions)}
+            description="Paying users"
+            icon={Activity}
+          />
 
-  {/* Charts Row 3 */}
-  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <KPICard
+            title="Employers"
+            value={formatNumber(stats.totalEmployers)}
+            description="Registered employers"
+            icon={Clock}
+          />
 
-    <DonutChart
-      title="Jobs by Category"
-      description="Distribution of active jobs"
-      data={jobsByCategory}
-    />
+          <KPICard
+            title="Pending Reports"
+            value={formatNumber(stats.pendingReports)}
+            description="Needs review"
+            icon={Flag}
+            className={
+              stats.pendingReports > 0
+                ? 'border-amber-500/50'
+                : ''
+            }
+          />
 
-    <HorizontalBarChart
-      title="Top Districts"
-      description="Districts with highest job listings"
-      data={topDistricts}
-      dataKey="jobs"
-    />
+          <KPICard
+            title="Construction Requests"
+            value={formatNumber(stats.pendingConstructionRequests)}
+            description="Pending requests"
+            icon={HardHat}
+          />
 
-  </div>
+        </div>
 
-  {/* Bottom Section */}
-  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Charts Row 1 */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-    {/* Recent Jobs */}
-    <Card>
+          <TrendAreaChart
+            title="User Registrations"
+            description="New users over the last 30 days"
+            data={userTrend}
+            dataKey="users"
+            color="hsl(var(--chart-1))"
+          />
 
-      <CardHeader>
-        <CardTitle className="text-base">
-          Recent Jobs
-        </CardTitle>
-      </CardHeader>
+          <TrendLineChart
+            title="Job Postings"
+            description="Jobs posted over the last 30 days"
+            data={jobTrend}
+            dataKey="jobs"
+            color="hsl(var(--chart-2))"
+          />
 
-      <CardContent className="overflow-x-auto">
+        </div>
 
-        <div className="space-y-3">
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-          {recentJobs.map((job) => (
-            <div
-              key={job.id}
-              className="flex flex-col gap-3 border-b pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-            >
+          <TrendAreaChart
+            title="Applications"
+            description="Applications over the last 30 days"
+            data={applicationTrend}
+            dataKey="applications"
+            color="hsl(var(--chart-3))"
+          />
 
-              <div className="space-y-1">
+          <TrendLineChart
+            title="Revenue"
+            description="Revenue over the last 30 days"
+            data={revenueTrend}
+            dataKey="revenue"
+            color="hsl(var(--chart-4))"
+          />
 
-                <p className="text-sm font-medium leading-none">
-                  {job.job_title}
-                </p>
+        </div>
 
-                <p className="text-xs text-muted-foreground">
-                  {Array.isArray(job.companies)
-                    ? job.companies[0]?.name || 'Unknown Company'
-                    : (job.companies as { name?: string } | null)?.name || 'Unknown Company'}
-                </p>
+        {/* Charts Row 3 */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+          <DonutChart
+            title="Jobs by Category"
+            description="Distribution of active jobs"
+            data={jobsByCategory}
+          />
+
+          <HorizontalBarChart
+            title="Top Districts"
+            description="Districts with highest job listings"
+            data={topDistricts}
+            dataKey="jobs"
+          />
+
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+          {/* Recent Jobs */}
+          <Card>
+
+            <CardHeader>
+              <CardTitle className="text-base">
+                Recent Jobs
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="overflow-x-auto">
+
+              <div className="space-y-3">
+
+                {recentJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="flex flex-col gap-3 border-b pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                  >
+
+                    <div className="space-y-1">
+
+                      <p className="text-sm font-medium leading-none">
+                        {job.job_title}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {Array.isArray(job.companies)
+                          ? job.companies[0]?.name || 'Unknown Company'
+                          : (job.companies as { name?: string } | null)?.name || 'Unknown Company'}
+                      </p>
+
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+
+                      <Badge
+                        variant={
+                          job.status === 'active'
+                            ? 'default'
+                            : job.status === 'pending'
+                              ? 'secondary'
+                              : 'outline'
+                        }
+                      >
+                        {job.status}
+                      </Badge>
+
+                      <span className="text-xs text-muted-foreground">
+                        {job.applications_count} apps
+                      </span>
+
+                    </div>
+
+                  </div>
+                ))}
+
+                {recentJobs.length === 0 && (
+                  <p className="py-4 text-center text-sm text-muted-foreground">
+                    No recent jobs found
+                  </p>
+                )}
 
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+            </CardContent>
 
-                <Badge
-                  variant={
-                    job.status === 'active'
-                      ? 'default'
-                      : job.status === 'pending'
-                        ? 'secondary'
-                        : 'outline'
-                  }
-                >
-                  {job.status}
-                </Badge>
+          </Card>
 
-                <span className="text-xs text-muted-foreground">
-                  {job.applications_count} apps
-                </span>
+          {/* Platform Overview */}
+          <Card>
+
+            <CardHeader>
+              <CardTitle className="text-base">
+                Platform Overview
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="overflow-x-auto">
+
+              <div className="space-y-4">
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Total Employers
+                  </span>
+
+                  <span className="font-medium">
+                    {formatNumber(stats.totalEmployers)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Total Companies
+                  </span>
+
+                  <span className="font-medium">
+                    {formatNumber(stats.totalCompanies)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Active Job Listings
+                  </span>
+
+                  <span className="font-medium">
+                    {formatNumber(stats.activeJobs)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Applications Today
+                  </span>
+
+                  <span className="font-medium">
+                    {formatNumber(stats.applicationsToday)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Active Subscriptions
+                  </span>
+
+                  <span className="font-medium">
+                    {formatNumber(stats.activeSubscriptions)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Pending Reports
+                  </span>
+
+                  <span className="font-medium text-amber-600">
+                    {formatNumber(stats.pendingReports)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Construction Requests
+                  </span>
+
+                  <span className="font-medium">
+                    {formatNumber(stats.pendingConstructionRequests)}
+                  </span>
+                </div>
 
               </div>
 
-            </div>
-          ))}
+            </CardContent>
 
-          {recentJobs.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              No recent jobs found
+          </Card>
+
+        </div>
+
+      </div>
+    )
+
+  } catch (error) {
+    console.error('Dashboard Error:', error)
+
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+
+        <Card className="w-full max-w-md border-destructive/30">
+
+          <CardHeader>
+            <CardTitle className="text-destructive">
+              Dashboard Error
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+
+            <p className="text-sm text-muted-foreground">
+              Failed to load dashboard analytics.
+              Please refresh the page or try again later.
             </p>
-          )}
 
-        </div>
+          </CardContent>
 
-      </CardContent>
+        </Card>
 
-    </Card>
-
-    {/* Platform Overview */}
-    <Card>
-
-      <CardHeader>
-        <CardTitle className="text-base">
-          Platform Overview
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="overflow-x-auto">
-
-        <div className="space-y-4">
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Total Employers
-            </span>
-
-            <span className="font-medium">
-              {formatNumber(stats.totalEmployers)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Total Companies
-            </span>
-
-            <span className="font-medium">
-              {formatNumber(stats.totalCompanies)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Active Job Listings
-            </span>
-
-            <span className="font-medium">
-              {formatNumber(stats.activeJobs)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Applications Today
-            </span>
-
-            <span className="font-medium">
-              {formatNumber(stats.applicationsToday)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Active Subscriptions
-            </span>
-
-            <span className="font-medium">
-              {formatNumber(stats.activeSubscriptions)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Pending Reports
-            </span>
-
-            <span className="font-medium text-amber-600">
-              {formatNumber(stats.pendingReports)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              Construction Requests
-            </span>
-
-            <span className="font-medium">
-              {formatNumber(stats.pendingConstructionRequests)}
-            </span>
-          </div>
-
-        </div>
-
-      </CardContent>
-
-    </Card>
-
-  </div>
-
-</div>
+      </div>
+    )
+  }
+}
