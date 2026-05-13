@@ -67,9 +67,9 @@ function ChartCard({
   children,
 }: ChartCardProps) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="w-full overflow-hidden">
 
-      <CardHeader>
+      <CardHeader className="space-y-1 p-4 sm:p-6">
 
         <CardTitle className="text-base sm:text-lg">
           {title}
@@ -83,7 +83,7 @@ function ChartCard({
 
       </CardHeader>
 
-      <CardContent className="overflow-hidden">
+      <CardContent className="overflow-hidden px-2 pb-4 sm:px-6">
         {children}
       </CardContent>
 
@@ -115,7 +115,7 @@ export function TrendAreaChart({
       description={description}
     >
 
-      <div className="h-[240px] w-full overflow-hidden sm:h-[300px]">
+      <div className="h-[220px] w-full overflow-hidden sm:h-[300px]">
 
         <ResponsiveContainer
           width="100%"
@@ -127,7 +127,7 @@ export function TrendAreaChart({
             margin={{
               top: 10,
               right: 10,
-              left: -20,
+              left: -25,
               bottom: 0,
             }}
           >
@@ -169,13 +169,14 @@ export function TrendAreaChart({
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
+              minTickGap={20}
             />
 
             <YAxis
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
-              width={30}
+              width={28}
             />
 
             <Tooltip
@@ -215,7 +216,7 @@ export function TrendLineChart({
       description={description}
     >
 
-      <div className="h-[240px] w-full overflow-hidden sm:h-[300px]">
+      <div className="h-[220px] w-full overflow-hidden sm:h-[300px]">
 
         <ResponsiveContainer
           width="100%"
@@ -227,7 +228,7 @@ export function TrendLineChart({
             margin={{
               top: 10,
               right: 10,
-              left: -20,
+              left: -25,
               bottom: 0,
             }}
           >
@@ -243,13 +244,14 @@ export function TrendLineChart({
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
+              minTickGap={20}
             />
 
             <YAxis
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
-              width={30}
+              width={28}
             />
 
             <Tooltip
@@ -311,7 +313,7 @@ export function HorizontalBarChart({
             margin={{
               top: 10,
               right: 10,
-              left: 10,
+              left: 0,
               bottom: 0,
             }}
           >
@@ -331,7 +333,7 @@ export function HorizontalBarChart({
             <YAxis
               type="category"
               dataKey="name"
-              width={80}
+              width={70}
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
@@ -376,7 +378,7 @@ export function DonutChart({
       description={description}
     >
 
-      <div className="h-[300px] w-full overflow-hidden sm:h-[350px]">
+      <div className="h-[320px] w-full overflow-hidden sm:h-[350px]">
 
         <ResponsiveContainer
           width="100%"
@@ -388,9 +390,9 @@ export function DonutChart({
             <Pie
               data={data}
               cx="50%"
-              cy="45%"
-              innerRadius={45}
-              outerRadius={80}
+              cy="40%"
+              innerRadius={40}
+              outerRadius={75}
               paddingAngle={2}
               dataKey="value"
               isAnimationActive={false}
@@ -408,6 +410,8 @@ export function DonutChart({
             <Tooltip contentStyle={tooltipStyle} />
 
             <Legend
+              verticalAlign="bottom"
+              height={60}
               wrapperStyle={{
                 fontSize: '11px',
                 paddingTop: '10px',
@@ -459,7 +463,7 @@ export function MultiLineChart({
             margin={{
               top: 10,
               right: 10,
-              left: -20,
+              left: -25,
               bottom: 0,
             }}
           >
@@ -475,13 +479,14 @@ export function MultiLineChart({
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
+              minTickGap={20}
             />
 
             <YAxis
               className="text-[10px] sm:text-xs"
               tickLine={false}
               axisLine={false}
-              width={30}
+              width={28}
             />
 
             <Tooltip
