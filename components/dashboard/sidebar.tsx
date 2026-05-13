@@ -1,288 +1,453 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-
-import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
-
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts'
 
-import {
-  LayoutDashboard,
-  Briefcase,
-  Building2,
-  Users,
-  FileText,
-  HardHat,
-  CreditCard,
-  Flag,
-  Bell,
-  MapPin,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  TrendingUp,
-  Search,
-  Menu,
-} from 'lucide-react'
-
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Jobs', href: '/dashboard/jobs', icon: Briefcase },
-  { name: 'Companies', href: '/dashboard/companies', icon: Building2 },
-  { name: 'Applications', href: '/dashboard/applications', icon: FileText },
-  { name: 'Users', href: '/dashboard/users', icon: Users },
-  { name: 'Construction', href: '/dashboard/construction', icon: HardHat },
-  { name: 'Revenue', href: '/dashboard/revenue', icon: CreditCard },
-  { name: 'Moderation', href: '/dashboard/moderation', icon: Flag },
-  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
-  { name: 'Districts', href: '/dashboard/districts', icon: MapPin },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
-  { name: 'Search Trends', href: '/dashboard/search-trends', icon: Search },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+const COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
 ]
 
-function SidebarContent({
-  isCollapsed,
-  pathname,
-  onLogout,
-}: {
-  isCollapsed: boolean
-  pathname: string
-  onLogout: () => Promise<void>
-}) {
+interface ChartCardProps {
+  title: string
+  description?: string
+  children: React.ReactNode
+}
+
+function ChartCard({ title, description, children }: ChartCardProps) {
   return (
-    <>
-      {/* Header */}
-      <div className="flex h-16 items-center border-b px-4">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
 
-        {!isCollapsed && (
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
-
-            </div>
-
-            <span className="font-semibold text-sidebar-foreground">
-              Khilonjiya
-            </span>
-          </Link>
+        {description && (
+          <CardDescription>
+            {description}
+          </CardDescription>
         )}
+      </CardHeader>
 
-      </div>
-
-      {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-4">
-
-        <nav className="flex flex-col gap-1">
-
-          {navigation.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (
-                item.href !== '/dashboard' &&
-                pathname.startsWith(item.href)
-              )
-
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                title={isCollapsed ? item.name : undefined}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
-                  isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
-                  isCollapsed && 'justify-center px-2'
-                )}
-              >
-
-                <item.icon className="h-4 w-4 shrink-0" />
-
-                {!isCollapsed && (
-                  <span>{item.name}</span>
-                )}
-
-              </Link>
-            )
-          })}
-
-        </nav>
-
-      </ScrollArea>
-
-      {/* Footer */}
-      <div className="border-t p-2">
-
-        <Button
-          variant="ghost"
-          className={cn(
-            'w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive',
-            isCollapsed && 'justify-center px-2'
-          )}
-          onClick={onLogout}
-        >
-
-          <LogOut className="h-4 w-4" />
-
-          {!isCollapsed && (
-            <span>Logout</span>
-          )}
-
-        </Button>
-
-      </div>
-    </>
+      <CardContent>
+        {children}
+      </CardContent>
+    </Card>
   )
 }
 
-export function Sidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
+interface TrendChartProps {
+  title: string
+  description?: string
+  data: Array<{ date: string; [key: string]: string | number }>
+  dataKey: string
+  color?: string
+}
 
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('sidebar-collapsed')
-
-    if (stored === 'true') {
-      setIsCollapsed(true)
-    }
-  }, [])
-
-  const toggleSidebar = () => {
-    const next = !isCollapsed
-
-    setIsCollapsed(next)
-
-    localStorage.setItem(
-      'sidebar-collapsed',
-      String(next)
-    )
-  }
-
-  const handleLogout = async () => {
-    try {
-      const supabase = createClient()
-
-      await supabase.auth.signOut()
-
-      router.push('/login')
-      router.refresh()
-
-    } catch (error) {
-      console.error('Logout Error:', error)
-    }
-  }
-
+export function TrendAreaChart({
+  title,
+  description,
+  data,
+  dataKey,
+  color = 'hsl(var(--chart-1))',
+}: TrendChartProps) {
   return (
-    <>
-      {/* Mobile Header */}
-      <div className="flex h-14 items-center border-b px-4 md:hidden">
+    <ChartCard title={title} description={description}>
 
-        <Sheet>
+      <div className="h-[250px] w-full overflow-hidden sm:h-[300px]">
 
-          <SheetTrigger asChild>
+        <ResponsiveContainer width="100%" height="100%">
 
-            <Button
-              variant="ghost"
-              size="icon"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+          <AreaChart data={data}>
 
-          </SheetTrigger>
+            <defs>
+              <linearGradient
+                id={`gradient-${dataKey}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
 
-          <SheetContent
-            side="left"
-            className="w-72 p-0"
-          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
 
-            <div className="flex h-full flex-col bg-sidebar">
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value) =>
+                new Date(value).toLocaleDateString(
+                  'en-US',
+                  { month: 'short', day: 'numeric' }
+                )
+              }
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
 
-              <SidebarContent
-                isCollapsed={false}
-                pathname={pathname}
-                onLogout={handleLogout}
-              />
+            <YAxis
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
 
-            </div>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+              }}
+              labelFormatter={(value) =>
+                new Date(value).toLocaleDateString(
+                  'en-US',
+                  {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  }
+                )
+              }
+            />
 
-          </SheetContent>
+            <Area
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              fill={`url(#gradient-${dataKey})`}
+              strokeWidth={2}
+            />
 
-        </Sheet>
+          </AreaChart>
 
-        <div className="ml-3 font-semibold">
-          Khilonjiya Dashboard
-        </div>
+        </ResponsiveContainer>
 
       </div>
 
-      {/* Desktop Sidebar */}
-      <aside
-        className={cn(
-          'hidden border-r bg-sidebar transition-all duration-300 md:flex md:flex-col',
-          isCollapsed ? 'md:w-16' : 'md:w-64'
-        )}
-      >
+    </ChartCard>
+  )
+}
 
-        <div className="flex h-full flex-col">
+export function TrendLineChart({
+  title,
+  description,
+  data,
+  dataKey,
+  color = 'hsl(var(--chart-2))',
+}: TrendChartProps) {
+  return (
+    <ChartCard title={title} description={description}>
 
-          <SidebarContent
-            isCollapsed={isCollapsed}
-            pathname={pathname}
-            onLogout={handleLogout}
-          />
+      <div className="h-[250px] w-full overflow-hidden sm:h-[300px]">
 
-          <div className="border-t p-2">
+        <ResponsiveContainer width="100%" height="100%">
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ml-auto flex"
-              onClick={toggleSidebar}
+          <LineChart data={data}>
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value) =>
+                new Date(value).toLocaleDateString(
+                  'en-US',
+                  { month: 'short', day: 'numeric' }
+                )
+              }
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
+
+            <YAxis
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
+
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+              }}
+              labelFormatter={(value) =>
+                new Date(value).toLocaleDateString(
+                  'en-US',
+                  {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  }
+                )
+              }
+            />
+
+            <Line
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              strokeWidth={2}
+              dot={false}
+            />
+
+          </LineChart>
+
+        </ResponsiveContainer>
+
+      </div>
+
+    </ChartCard>
+  )
+}
+
+interface BarChartProps {
+  title: string
+  description?: string
+  data: Array<{ name: string; [key: string]: string | number }>
+  dataKey: string
+}
+
+export function HorizontalBarChart({
+  title,
+  description,
+  data,
+  dataKey,
+}: BarChartProps) {
+  return (
+    <ChartCard title={title} description={description}>
+
+      <div className="h-[250px] w-full overflow-hidden sm:h-[350px]">
+
+        <ResponsiveContainer width="100%" height="100%">
+
+          <BarChart
+            data={data}
+            layout="vertical"
+          >
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
+            <XAxis
+              type="number"
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
+
+            <YAxis
+              type="category"
+              dataKey="name"
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+              width={100}
+            />
+
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+              }}
+            />
+
+            <Bar
+              dataKey={dataKey}
+              fill="hsl(var(--chart-1))"
+              radius={[0, 4, 4, 0]}
+            />
+
+          </BarChart>
+
+        </ResponsiveContainer>
+
+      </div>
+
+    </ChartCard>
+  )
+}
+
+interface PieChartProps {
+  title: string
+  description?: string
+  data: Array<{ name: string; value: number }>
+}
+
+export function DonutChart({
+  title,
+  description,
+  data,
+}: PieChartProps) {
+  return (
+    <ChartCard title={title} description={description}>
+
+      <div className="h-[250px] w-full overflow-hidden sm:h-[350px]">
+
+        <ResponsiveContainer width="100%" height="100%">
+
+          <PieChart>
+
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={100}
+              paddingAngle={2}
+              dataKey="value"
             >
 
-              {isCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
+              {data.map((_, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+
+            </Pie>
+
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+              }}
+            />
+
+            <Legend
+              layout="vertical"
+              align="right"
+              verticalAlign="middle"
+              formatter={(value) => (
+                <span className="text-xs text-foreground">
+                  {value}
+                </span>
               )}
+            />
 
-            </Button>
+          </PieChart>
 
-          </div>
+        </ResponsiveContainer>
 
-        </div>
+      </div>
 
-      </aside>
-    </>
+    </ChartCard>
+  )
+}
+
+interface MultiLineChartProps {
+  title: string
+  description?: string
+  data: Array<Record<string, string | number>>
+  lines: Array<{ dataKey: string; color: string; name: string }>
+}
+
+export function MultiLineChart({
+  title,
+  description,
+  data,
+  lines,
+}: MultiLineChartProps) {
+  return (
+    <ChartCard title={title} description={description}>
+
+      <div className="h-[250px] w-full overflow-hidden sm:h-[350px]">
+
+        <ResponsiveContainer width="100%" height="100%">
+
+          <LineChart data={data}>
+
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
+
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value) =>
+                new Date(value).toLocaleDateString(
+                  'en-US',
+                  { month: 'short', day: 'numeric' }
+                )
+              }
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
+
+            <YAxis
+              className="text-xs"
+              tickLine={false}
+              axisLine={false}
+            />
+
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+              }}
+              labelFormatter={(value) =>
+                new Date(value).toLocaleDateString(
+                  'en-US',
+                  {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  }
+                )
+              }
+            />
+
+            <Legend />
+
+            {lines.map((line) => (
+              <Line
+                key={line.dataKey}
+                type="monotone"
+                dataKey={line.dataKey}
+                name={line.name}
+                stroke={line.color}
+                strokeWidth={2}
+                dot={false}
+              />
+            ))}
+
+          </LineChart>
+
+        </ResponsiveContainer>
+
+      </div>
+
+    </ChartCard>
   )
 }
