@@ -92,156 +92,164 @@ export function Header({
   }, [user])
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 
-      {/* Search */}
-      <div className="relative hidden w-full max-w-md md:block">
+      <div className="flex h-16 w-full items-center justify-between gap-2 px-4 md:px-6">
 
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        {/* Search */}
+        <div className="hidden min-w-0 flex-1 md:block">
 
-        <Input
-          type="search"
-          placeholder="Search jobs, companies, users..."
-          className="pl-10"
-        />
+          <div className="relative max-w-md">
 
-      </div>
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-      {/* Mobile Spacer */}
-      <div className="md:hidden" />
+            <Input
+              type="search"
+              placeholder="Search jobs, companies, users..."
+              className="w-full pl-10"
+            />
 
-      {/* Actions */}
-      <div className="flex items-center gap-2">
+          </div>
 
-        {/* Theme Toggle */}
-        {mounted && (
+        </div>
+
+        {/* Mobile Spacer */}
+        <div className="flex-1 md:hidden" />
+
+        {/* Actions */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+
+          {/* Theme Toggle */}
+          {mounted && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                setTheme(
+                  theme === 'dark'
+                    ? 'light'
+                    : 'dark'
+                )
+              }
+            >
+
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+
+            </Button>
+          )}
+
+          {/* Notifications */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              setTheme(
-                theme === 'dark'
-                  ? 'light'
-                  : 'dark'
-              )
-            }
+            className="relative shrink-0"
           >
 
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+            <Bell className="h-4 w-4" />
+
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
+              3
+            </span>
 
           </Button>
-        )}
 
-        {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-        >
+          {/* User Dropdown */}
+          <DropdownMenu>
 
-          <Bell className="h-4 w-4" />
+            <DropdownMenuTrigger asChild>
 
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
-            3
-          </span>
+              <Button
+                variant="ghost"
+                className="relative h-9 w-9 shrink-0 rounded-full"
+              >
 
-        </Button>
+                <Avatar className="h-9 w-9">
 
-        {/* User Dropdown */}
-        <DropdownMenu>
+                  <AvatarImage
+                    src={user?.profile?.avatar_url || ''}
+                    alt="Avatar"
+                  />
 
-          <DropdownMenuTrigger asChild>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {userInitials}
+                  </AvatarFallback>
 
-            <Button
-              variant="ghost"
-              className="relative h-9 w-9 rounded-full"
+                </Avatar>
+
+              </Button>
+
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              className="w-56"
+              align="end"
+              forceMount
             >
 
-              <Avatar className="h-9 w-9">
+              <DropdownMenuLabel className="font-normal">
 
-                <AvatarImage
-                  src={user?.profile?.avatar_url || ''}
-                  alt="Avatar"
-                />
+                <div className="flex flex-col space-y-1">
 
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {userInitials}
-                </AvatarFallback>
+                  <p className="truncate text-sm font-medium leading-none">
+                    {user?.profile?.full_name || 'Admin'}
+                  </p>
 
-              </Avatar>
+                  <p className="truncate text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
 
-            </Button>
+                </div>
 
-          </DropdownMenuTrigger>
+              </DropdownMenuLabel>
 
-          <DropdownMenuContent
-            className="w-56"
-            align="end"
-            forceMount
-          >
+              <DropdownMenuSeparator />
 
-            <DropdownMenuLabel className="font-normal">
+              <DropdownMenuItem asChild>
 
-              <div className="flex flex-col space-y-1">
+                <Link href="/dashboard/settings">
 
-                <p className="text-sm font-medium leading-none">
-                  {user?.profile?.full_name || 'Admin'}
-                </p>
+                  <Settings className="mr-2 h-4 w-4" />
 
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
+                  Settings
 
-              </div>
+                </Link>
 
-            </DropdownMenuLabel>
+              </DropdownMenuItem>
 
-            <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
 
-            <DropdownMenuItem asChild>
+                <Link href="/dashboard/profile">
 
-              <Link href="/dashboard/settings">
+                  <User className="mr-2 h-4 w-4" />
 
-                <Settings className="mr-2 h-4 w-4" />
+                  Profile
 
-                Settings
+                </Link>
 
-              </Link>
+              </DropdownMenuItem>
 
-            </DropdownMenuItem>
+              <DropdownMenuSeparator />
 
-            <DropdownMenuItem asChild>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-destructive focus:text-destructive"
+              >
 
-              <Link href="/dashboard/profile">
+                <LogOut className="mr-2 h-4 w-4" />
 
-                <User className="mr-2 h-4 w-4" />
+                Logout
 
-                Profile
+              </DropdownMenuItem>
 
-              </Link>
+            </DropdownMenuContent>
 
-            </DropdownMenuItem>
+          </DropdownMenu>
 
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="text-destructive focus:text-destructive"
-            >
-
-              <LogOut className="mr-2 h-4 w-4" />
-
-              Logout
-
-            </DropdownMenuItem>
-
-          </DropdownMenuContent>
-
-        </DropdownMenu>
+        </div>
 
       </div>
 
