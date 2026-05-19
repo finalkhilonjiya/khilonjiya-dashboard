@@ -33,7 +33,7 @@ function formatCurrency(amount: number) {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(Number(amount || 0))
 }
 
 interface PageProps {
@@ -66,6 +66,7 @@ export default async function RevenuePage({
     <div className="space-y-6">
 
       <div>
+
         <h1 className="text-2xl font-bold tracking-tight">
           Revenue & Payments
         </h1>
@@ -73,6 +74,7 @@ export default async function RevenuePage({
         <p className="text-muted-foreground">
           Complete subscription and revenue analytics.
         </p>
+
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -133,9 +135,11 @@ export default async function RevenuePage({
       <Card>
 
         <CardHeader>
+
           <CardTitle>
             Recent Subscription Payments
           </CardTitle>
+
         </CardHeader>
 
         <CardContent>
@@ -154,14 +158,15 @@ export default async function RevenuePage({
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                  className="flex flex-col gap-4 border-b pb-4 last:border-0 last:pb-0 md:flex-row md:items-center md:justify-between"
                 >
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-4 min-w-0">
 
-                    <div className="h-12 w-12 overflow-hidden rounded-full bg-muted">
+                    <div className="h-12 w-12 overflow-hidden rounded-full bg-muted flex-shrink-0">
 
                       {profile?.avatar_url ? (
+
                         <img
                           src={
                             profile.avatar_url
@@ -169,25 +174,28 @@ export default async function RevenuePage({
                           alt="avatar"
                           className="h-full w-full object-cover"
                         />
+
                       ) : (
+
                         <div className="flex h-full w-full items-center justify-center text-sm font-bold">
                           {profile?.full_name
                             ?.charAt(0)
                             ?.toUpperCase() || 'U'}
                         </div>
+
                       )}
 
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
 
-                      <p className="font-semibold">
+                      <p className="font-semibold truncate">
                         {profile?.full_name ||
                           'Unknown User'}
                       </p>
 
                       {profile?.email && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground break-all">
                           {profile.email}
                         </p>
                       )}
@@ -212,52 +220,61 @@ export default async function RevenuePage({
 
                       <p className="text-xs text-muted-foreground">
                         Plan:{' '}
-                        {tx.plan_name}
+                        {tx.plan_name || 'N/A'}
                       </p>
 
                       <p className="text-xs text-muted-foreground">
                         Platform:{' '}
-                        {tx.platform}
+                        {tx.platform || 'N/A'}
                       </p>
 
                       <p className="text-xs text-muted-foreground">
+
                         Purchased:{' '}
-                        {format(
-                          new Date(
-                            tx.created_at
-                          ),
-                          'PPpp'
-                        )}
+
+                        {tx.created_at
+                          ? format(
+                              new Date(
+                                tx.created_at
+                              ),
+                              'PPpp'
+                            )
+                          : 'N/A'}
+
                       </p>
 
                     </div>
 
                   </div>
 
-                  <div className="text-right space-y-2">
+                  <div className="text-left md:text-right space-y-2">
 
                     <p className="text-lg font-bold">
+
                       {formatCurrency(
-                        tx.amount_rupees
+                        Number(
+                          tx.amount_rupees || 0
+                        )
                       )}
+
                     </p>
 
                     <Badge
                       variant={
-                        tx.status ===
-                        'active'
+                        tx.status === 'active'
                           ? 'default'
-                          : tx.status ===
-                              'pending'
+                          : tx.status === 'pending'
                             ? 'secondary'
-                            : 'destructive'
+                            : tx.status === 'expired'
+                              ? 'outline'
+                              : 'destructive'
                       }
                     >
-                      {tx.status}
+                      {tx.status || 'unknown'}
                     </Badge>
 
                     {tx.razorpay_payment_id && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground break-all">
                         {tx.razorpay_payment_id}
                       </p>
                     )}
@@ -269,9 +286,11 @@ export default async function RevenuePage({
             })}
 
             {transactions.length === 0 && (
+
               <p className="py-8 text-center text-sm text-muted-foreground">
                 No subscription payments found
               </p>
+
             )}
 
           </div>
