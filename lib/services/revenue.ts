@@ -32,7 +32,6 @@ export async function getRevenueStats() {
   const successfulStatuses = [
     'active',
     'completed',
-    'paid',
   ]
 
   const [
@@ -255,7 +254,6 @@ export async function getMonthlyRevenueTrend(
       .in('status', [
         'active',
         'completed',
-        'paid',
       ])
       .gte(
         'created_at',
