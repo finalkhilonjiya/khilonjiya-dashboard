@@ -1,3 +1,5 @@
+// lib/services/revenue.ts
+
 import { createAdminClient } from '@/lib/supabase/server'
 
 export async function getRevenueStats() {
@@ -28,25 +30,39 @@ export async function getRevenueStats() {
 
   const currentTime = new Date().toISOString()
 
+  const successfulStatuses = [
+    'active',
+    'completed',
+    'paid',
+  ]
+
   const [
-    { data: thisMonthPayments },
-    { data: lastMonthPayments },
+    { data: thisMonthSubscriptions },
+    { data: lastMonthSubscriptions },
     { count: activeSubscriptions },
     { count: totalTransactions },
   ] = await Promise.all([
 
     supabase
-      .from('payment_transactions')
-      .select('amount_inr')
-      .eq('status', 'paid')
-      .gte('paid_at', startOfMonth),
+      .from('user_subscriptions')
+      .select(`
+        amount_rupees,
+        created_at,
+        status
+      `)
+      .in('status', successfulStatuses)
+      .gte('created_at', startOfMonth),
 
     supabase
-      .from('payment_transactions')
-      .select('amount_inr')
-      .eq('status', 'paid')
-      .gte('paid_at', startOfLastMonth)
-      .lte('paid_at', endOfLastMonth),
+      .from('user_subscriptions')
+      .select(`
+        amount_rupees,
+        created_at,
+        status
+      `)
+      .in('status', successfulStatuses)
+      .gte('created_at', startOfLastMonth)
+      .lte('created_at', endOfLastMonth),
 
     supabase
       .from('user_subscriptions')
@@ -58,7 +74,7 @@ export async function getRevenueStats() {
       .gte('expires_at', currentTime),
 
     supabase
-      .from('payment_transactions')
+      .from('user_subscriptions')
       .select('*', {
         count: 'exact',
         head: true,
@@ -66,33 +82,40 @@ export async function getRevenueStats() {
   ])
 
   const revenueMTD =
-    (thisMonthPayments || []).reduce(
-      (sum, p) =>
-        sum + Number(p.amount_inr || 0),
+    (thisMonthSubscriptions || []).reduce(
+      (sum, item) =>
+        sum +
+        Number(item.amount_rupees || 0),
       0
     )
 
   const revenueLastMonth =
-    (lastMonthPayments || []).reduce(
-      (sum, p) =>
-        sum + Number(p.amount_inr || 0),
+    (lastMonthSubscriptions || []).reduce(
+      (sum, item) =>
+        sum +
+        Number(item.amount_rupees || 0),
       0
     )
 
   return {
     revenueMTD,
+
     revenueLastMonth,
+
     activeSubscriptions:
       activeSubscriptions || 0,
+
     totalTransactions:
       totalTransactions || 0,
 
     growthPercent:
       revenueLastMonth > 0
-        ? ((revenueMTD -
-            revenueLastMonth) /
-            revenueLastMonth) *
-          100
+        ? (
+            ((revenueMTD -
+              revenueLastMonth) /
+              revenueLastMonth) *
+            100
+          )
         : 0,
   }
 }
@@ -110,14 +133,18 @@ export async function getTransactions(
     count,
     error,
   } = await supabase
-    .from('payment_transactions')
+    .from('user_subscriptions')
     .select(
       `
       *,
-      user_profiles!payment_transactions_user_id_fkey(
+      user_profiles!user_subscriptions_user_id_fkey(
         full_name,
         email,
-        mobile_number
+        mobile_number,
+        role,
+        avatar_url,
+        current_city,
+        current_state
       )
     `,
       {
@@ -142,51 +169,6 @@ export async function getTransactions(
   }
 }
 
-export async function getSubscriptions(
-  page: number = 1,
-  limit: number = 10
-) {
-  const supabase = await createAdminClient()
-
-  const offset = (page - 1) * limit
-
-  const {
-    data,
-    count,
-    error,
-  } = await supabase
-    .from('user_subscriptions')
-    .select(
-      `
-      *,
-      user_profiles!user_subscriptions_user_id_fkey(
-        full_name,
-        email,
-        mobile_number
-      )
-    `,
-      {
-        count: 'exact',
-      }
-    )
-    .order('created_at', {
-      ascending: false,
-    })
-    .range(
-      offset,
-      offset + limit - 1
-    )
-
-  if (error) {
-    throw error
-  }
-
-  return {
-    subscriptions: data || [],
-    total: count || 0,
-  }
-}
-
 export async function getMonthlyRevenueTrend(
   months: number = 6
 ) {
@@ -198,17 +180,30 @@ export async function getMonthlyRevenueTrend(
     startDate.getMonth() - months
   )
 
-  const { data } = await supabase
-    .from('payment_transactions')
-    .select('amount_inr, paid_at')
-    .eq('status', 'paid')
-    .gte(
-      'paid_at',
-      startDate.toISOString()
-    )
-    .order('paid_at', {
-      ascending: true,
-    })
+  const { data, error } =
+    await supabase
+      .from('user_subscriptions')
+      .select(`
+        amount_rupees,
+        created_at,
+        status
+      `)
+      .in('status', [
+        'active',
+        'completed',
+        'paid',
+      ])
+      .gte(
+        'created_at',
+        startDate.toISOString()
+      )
+      .order('created_at', {
+        ascending: true,
+      })
+
+  if (error) {
+    throw error
+  }
 
   const grouped = (
     data || []
@@ -217,14 +212,10 @@ export async function getMonthlyRevenueTrend(
       acc: Record<string, number>,
       item
     ) => {
-      if (!item.paid_at) {
-        return acc
-      }
-
       const month = new Date(
-        item.paid_at
+        item.created_at
       ).toLocaleDateString(
-        'en-US',
+        'en-IN',
         {
           year: 'numeric',
           month: 'short',
@@ -233,7 +224,7 @@ export async function getMonthlyRevenueTrend(
 
       acc[month] =
         (acc[month] || 0) +
-        Number(item.amount_inr || 0)
+        Number(item.amount_rupees || 0)
 
       return acc
     },
