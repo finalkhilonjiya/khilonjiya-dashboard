@@ -1,328 +1,218 @@
-// lib/services/revenue.ts
+import {
+  getRevenueStats,
+  getTransactions,
+  getMonthlyRevenueTrend,
+} from '@/lib/services/revenue'
 
-import { createAdminClient } from '@/lib/supabase/server'
+import { KPICard } from '@/components/dashboard/kpi-card'
 
-export async function getRevenueStats() {
-  const supabase = await createAdminClient()
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
-  const now = new Date()
+import { Badge } from '@/components/ui/badge'
 
-  const startOfMonth = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    1
-  ).toISOString()
+import {
+  IndianRupee,
+  TrendingUp,
+  Users,
+  CreditCard,
+} from 'lucide-react'
 
-  const startOfLastMonth = new Date(
-    now.getFullYear(),
-    now.getMonth() - 1,
-    1
-  ).toISOString()
+import { format } from 'date-fns'
 
-  const endOfLastMonth = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    0,
-    23,
-    59,
-    59
-  ).toISOString()
+import RevenueChart from './revenue-chart'
 
-  const currentTime =
-    new Date().toISOString()
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
 
-  const successfulStatuses = [
-    'active',
-    'completed',
-    'paid',
-  ]
+interface PageProps {
+  searchParams: Promise<{
+    page?: string
+  }>
+}
+
+export default async function RevenuePage({
+  searchParams,
+}: PageProps) {
+
+  const params = await searchParams
+
+  const page = parseInt(
+    params.page || '1'
+  )
 
   const [
-    { data: thisMonthSubscriptions },
-    { data: lastMonthSubscriptions },
-    { count: activeSubscriptions },
-    { count: totalTransactions },
+    stats,
+    { transactions },
+    revenueTrend,
   ] = await Promise.all([
-
-    supabase
-      .from('user_subscriptions')
-      .select(`
-        amount_rupees,
-        created_at,
-        status
-      `)
-      .in(
-        'status',
-        successfulStatuses
-      )
-      .gte(
-        'created_at',
-        startOfMonth
-      ),
-
-    supabase
-      .from('user_subscriptions')
-      .select(`
-        amount_rupees,
-        created_at,
-        status
-      `)
-      .in(
-        'status',
-        successfulStatuses
-      )
-      .gte(
-        'created_at',
-        startOfLastMonth
-      )
-      .lte(
-        'created_at',
-        endOfLastMonth
-      ),
-
-    supabase
-      .from('user_subscriptions')
-      .select('*', {
-        count: 'exact',
-        head: true,
-      })
-      .eq('status', 'active')
-      .gte(
-        'expires_at',
-        currentTime
-      ),
-
-    supabase
-      .from('user_subscriptions')
-      .select('*', {
-        count: 'exact',
-        head: true,
-      }),
+    getRevenueStats(),
+    getTransactions(page, 10),
+    getMonthlyRevenueTrend(6),
   ])
 
-  const revenueMTD =
-    (
-      thisMonthSubscriptions || []
-    ).reduce(
-      (sum, item) =>
-        sum +
-        Number(
-          item.amount_rupees || 0
-        ),
-      0
-    )
+  return (
+    <div className="space-y-6">
 
-  const revenueLastMonth =
-    (
-      lastMonthSubscriptions || []
-    ).reduce(
-      (sum, item) =>
-        sum +
-        Number(
-          item.amount_rupees || 0
-        ),
-      0
-    )
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">
+          Revenue & Payments
+        </h1>
 
-  return {
-    revenueMTD,
+        <p className="text-muted-foreground">
+          Complete subscription and revenue analytics.
+        </p>
+      </div>
 
-    revenueLastMonth,
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-    activeSubscriptions:
-      activeSubscriptions || 0,
+        <KPICard
+          title="Revenue MTD"
+          value={formatCurrency(
+            stats.revenueMTD
+          )}
+          description="Current month revenue"
+          icon={IndianRupee}
+        />
 
-    totalTransactions:
-      totalTransactions || 0,
+        <KPICard
+          title="Last Month"
+          value={formatCurrency(
+            stats.revenueLastMonth
+          )}
+          description="Previous month"
+          icon={TrendingUp}
+        />
 
-    growthPercent:
-      revenueLastMonth > 0
-        ? (
-            ((revenueMTD -
-              revenueLastMonth) /
-              revenueLastMonth) *
-            100
-          )
-        : 0,
-  }
-}
-
-export async function getTransactions(
-  page: number = 1,
-  limit: number = 10
-) {
-  const supabase =
-    await createAdminClient()
-
-  const offset =
-    (page - 1) * limit
-
-  // =========================
-  // STEP 1: Get subscriptions
-  // =========================
-
-  const {
-    data: subscriptions,
-    count,
-    error,
-  } = await supabase
-    .from('user_subscriptions')
-    .select('*', {
-      count: 'exact',
-    })
-    .order('created_at', {
-      ascending: false,
-    })
-    .range(
-      offset,
-      offset + limit - 1
-    )
-
-  if (error) {
-    throw error
-  }
-
-  if (
-    !subscriptions ||
-    subscriptions.length === 0
-  ) {
-    return {
-      transactions: [],
-      total: 0,
-    }
-  }
-
-  // =========================
-  // STEP 2: Get user ids
-  // =========================
-
-  const userIds =
-    subscriptions.map(
-      (item) => item.user_id
-    )
-
-  // =========================
-  // STEP 3: Fetch profiles
-  // =========================
-
-  const {
-    data: profiles,
-    error: profilesError,
-  } = await supabase
-    .from('user_profiles')
-    .select(`
-      id,
-      full_name,
-      email,
-      mobile_number,
-      role,
-      avatar_url,
-      current_city,
-      current_state
-    `)
-    .in('id', userIds)
-
-  if (profilesError) {
-    throw profilesError
-  }
-
-  // =========================
-  // STEP 4: Merge manually
-  // =========================
-
-  const transactions =
-    subscriptions.map(
-      (subscription) => ({
-        ...subscription,
-
-        user_profiles:
-          profiles?.find(
-            (profile) =>
-              profile.id ===
-              subscription.user_id
-          ) || null,
-      })
-    )
-
-  return {
-    transactions,
-    total: count || 0,
-  }
-}
-
-export async function getMonthlyRevenueTrend(
-  months: number = 6
-) {
-  const supabase =
-    await createAdminClient()
-
-  const startDate = new Date()
-
-  startDate.setMonth(
-    startDate.getMonth() - months
-  )
-
-  const { data, error } =
-    await supabase
-      .from('user_subscriptions')
-      .select(`
-        amount_rupees,
-        created_at,
-        status
-      `)
-      .in('status', [
-        'active',
-        'completed',
-        'paid',
-      ])
-      .gte(
-        'created_at',
-        startDate.toISOString()
-      )
-      .order('created_at', {
-        ascending: true,
-      })
-
-  if (error) {
-    throw error
-  }
-
-  const grouped = (
-    data || []
-  ).reduce(
-    (
-      acc: Record<
-        string,
-        number
-      >,
-      item
-    ) => {
-      const month =
-        new Date(
-          item.created_at
-        ).toLocaleDateString(
-          'en-IN',
-          {
-            year: 'numeric',
-            month: 'short',
+        <KPICard
+          title="Active Subscribers"
+          value={
+            stats.activeSubscriptions
           }
-        )
+          description="Currently active"
+          icon={Users}
+        />
 
-      acc[month] =
-        (acc[month] || 0) +
-        Number(
-          item.amount_rupees || 0
-        )
+        <KPICard
+          title="Total Transactions"
+          value={
+            stats.totalTransactions
+          }
+          description="All subscription purchases"
+          icon={CreditCard}
+        />
 
-      return acc
-    },
-    {}
-  )
+      </div>
 
-  return Object.entries(grouped).map(
-    ([month, revenue]) => ({
-      month,
-      revenue,
-    })
+      <RevenueChart
+        revenueTrend={revenueTrend}
+      />
+
+      <Card>
+
+        <CardHeader>
+          <CardTitle>
+            Recent Subscription Payments
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+
+          <div className="space-y-4">
+
+            {transactions.map((tx: any) => {
+
+              const profile =
+                tx.user_profiles
+
+              return (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                >
+
+                  <div className="flex items-center gap-4">
+
+                    <div className="h-12 w-12 overflow-hidden rounded-full bg-muted">
+
+                      {profile?.avatar_url ? (
+                        <img
+                          src={
+                            profile.avatar_url
+                          }
+                          alt="avatar"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold">
+                          {profile?.full_name
+                            ?.charAt(0)
+                            ?.toUpperCase() || 'U'}
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="space-y-1">
+
+                      <p className="font-semibold">
+                        {profile?.full_name ||
+                          'Unknown User'}
+                      </p>
+
+                      {profile?.email && (
+                        <p className="text-xs text-muted-foreground">
+                          {profile.email}
+                        </p>
+                      )}
+
+                      {profile?.mobile_number && (
+                        <p className="text-xs text-muted-foreground">
+                          {profile.mobile_number}
+                        </p>
+                      )}
+
+                      <p className="text-xs text-muted-foreground">
+                        Plan: {tx.plan_name}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div className="text-right space-y-2">
+
+                    <p className="text-lg font-bold">
+                      {formatCurrency(
+                        tx.amount_rupees
+                      )}
+                    </p>
+
+                    <Badge>
+                      {tx.status}
+                    </Badge>
+
+                  </div>
+
+                </div>
+              )
+            })}
+
+          </div>
+
+        </CardContent>
+
+      </Card>
+
+    </div>
   )
 }
