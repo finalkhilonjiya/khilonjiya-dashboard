@@ -1,4 +1,10 @@
-import { getRevenueStats, getTransactions, getMonthlyRevenueTrend } from '@/lib/services/revenue'
+// app/dashboard/revenue/page.tsx
+
+import {
+  getRevenueStats,
+  getTransactions,
+  getMonthlyRevenueTrend,
+} from '@/lib/services/revenue'
 
 import { KPICard } from '@/components/dashboard/kpi-card'
 
@@ -42,14 +48,19 @@ export default async function RevenuePage({
 
   const params = await searchParams
 
-  const page = parseInt(params.page || '1')
+  const page = parseInt(
+    params.page || '1'
+  )
 
-  const [stats, { transactions }, revenueTrend] =
-    await Promise.all([
-      getRevenueStats(),
-      getTransactions(page, 10),
-      getMonthlyRevenueTrend(6),
-    ])
+  const [
+    stats,
+    { transactions },
+    revenueTrend,
+  ] = await Promise.all([
+    getRevenueStats(),
+    getTransactions(page, 10),
+    getMonthlyRevenueTrend(6),
+  ])
 
   return (
     <div className="space-y-6">
@@ -60,7 +71,7 @@ export default async function RevenuePage({
         </h1>
 
         <p className="text-muted-foreground">
-          Monitor revenue, subscriptions, and payment transactions.
+          Complete subscription and revenue analytics.
         </p>
       </div>
 
@@ -68,14 +79,19 @@ export default async function RevenuePage({
 
         <KPICard
           title="Revenue MTD"
-          value={formatCurrency(stats.revenueMTD)}
-          description="This month"
+          value={formatCurrency(
+            stats.revenueMTD
+          )}
+          description="Current month revenue"
           icon={IndianRupee}
           trend={
             stats.growthPercent !== 0
               ? {
-                  value: Math.round(stats.growthPercent),
-                  isPositive: stats.growthPercent > 0,
+                  value: Math.round(
+                    stats.growthPercent
+                  ),
+                  isPositive:
+                    stats.growthPercent > 0,
                 }
               : undefined
           }
@@ -83,34 +99,42 @@ export default async function RevenuePage({
 
         <KPICard
           title="Last Month"
-          value={formatCurrency(stats.revenueLastMonth)}
+          value={formatCurrency(
+            stats.revenueLastMonth
+          )}
           description="Previous month"
           icon={TrendingUp}
         />
 
         <KPICard
-          title="Active Subscriptions"
-          value={stats.activeSubscriptions}
-          description="Paying users"
+          title="Active Subscribers"
+          value={
+            stats.activeSubscriptions
+          }
+          description="Currently active"
           icon={Users}
         />
 
         <KPICard
           title="Total Transactions"
-          value={stats.totalTransactions}
-          description="All time"
+          value={
+            stats.totalTransactions
+          }
+          description="All subscription purchases"
           icon={CreditCard}
         />
 
       </div>
 
-      <RevenueChart revenueTrend={revenueTrend} />
+      <RevenueChart
+        revenueTrend={revenueTrend}
+      />
 
       <Card>
 
         <CardHeader>
           <CardTitle>
-            Recent Transactions
+            Recent Subscription Payments
           </CardTitle>
         </CardHeader>
 
@@ -119,9 +143,13 @@ export default async function RevenuePage({
           <div className="space-y-4">
 
             {transactions.map((tx) => {
-              const profile = Array.isArray(tx.user_profiles)
-                ? tx.user_profiles[0]
-                : tx.user_profiles
+
+              const profile =
+                Array.isArray(
+                  tx.user_profiles
+                )
+                  ? tx.user_profiles[0]
+                  : tx.user_profiles
 
               return (
                 <div
@@ -129,40 +157,105 @@ export default async function RevenuePage({
                   className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
                 >
 
-                  <div className="space-y-1">
+                  <div className="flex items-center gap-4">
 
-                    <p className="font-medium">
-                      {profile?.full_name || 'Unknown User'}
-                    </p>
+                    <div className="h-12 w-12 overflow-hidden rounded-full bg-muted">
 
-                    <p className="text-xs text-muted-foreground">
-                      {profile?.email || 'No email'}
-                    </p>
+                      {profile?.avatar_url ? (
+                        <img
+                          src={
+                            profile.avatar_url
+                          }
+                          alt="avatar"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold">
+                          {profile?.full_name
+                            ?.charAt(0)
+                            ?.toUpperCase() || 'U'}
+                        </div>
+                      )}
 
-                    <p className="text-xs text-muted-foreground">
-                      {tx.plan_key} —{' '}
-                      {format(new Date(tx.created_at), 'PPp')}
-                    </p>
+                    </div>
+
+                    <div className="space-y-1">
+
+                      <p className="font-semibold">
+                        {profile?.full_name ||
+                          'Unknown User'}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {profile?.email ||
+                          'No email'}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {profile?.mobile_number ||
+                          'No mobile'}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {profile?.current_city || ''}
+                        {profile?.current_city &&
+                        profile?.current_state
+                          ? ', '
+                          : ''}
+                        {profile?.current_state ||
+                          ''}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        Plan:{' '}
+                        {tx.plan_name}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        Platform:{' '}
+                        {tx.platform}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        Purchased:{' '}
+                        {format(
+                          new Date(
+                            tx.created_at
+                          ),
+                          'PPpp'
+                        )}
+                      </p>
+
+                    </div>
 
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right space-y-2">
 
-                    <p className="font-medium">
-                      {formatCurrency(tx.amount_inr)}
+                    <p className="text-lg font-bold">
+                      {formatCurrency(
+                        tx.amount_rupees
+                      )}
                     </p>
 
                     <Badge
                       variant={
-                        tx.status === 'paid'
+                        tx.status ===
+                        'active'
                           ? 'default'
-                          : tx.status === 'created'
+                          : tx.status ===
+                              'pending'
                             ? 'secondary'
                             : 'destructive'
                       }
                     >
                       {tx.status}
                     </Badge>
+
+                    <p className="text-xs text-muted-foreground">
+                      {tx.razorpay_payment_id ||
+                        'No Payment ID'}
+                    </p>
 
                   </div>
 
@@ -171,8 +264,8 @@ export default async function RevenuePage({
             })}
 
             {transactions.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                No transactions found
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No subscription payments found
               </p>
             )}
 
