@@ -186,25 +186,29 @@ export default async function RevenuePage({
                           'Unknown User'}
                       </p>
 
-                      <p className="text-xs text-muted-foreground">
-                        {profile?.email ||
-                          'No email'}
-                      </p>
+                      {profile?.email && (
+                        <p className="text-xs text-muted-foreground">
+                          {profile.email}
+                        </p>
+                      )}
 
-                      <p className="text-xs text-muted-foreground">
-                        {profile?.mobile_number ||
-                          'No mobile'}
-                      </p>
+                      {profile?.mobile_number && (
+                        <p className="text-xs text-muted-foreground">
+                          {profile.mobile_number}
+                        </p>
+                      )}
 
-                      <p className="text-xs text-muted-foreground">
-                        {profile?.current_city || ''}
-                        {profile?.current_city &&
-                        profile?.current_state
-                          ? ', '
-                          : ''}
-                        {profile?.current_state ||
-                          ''}
-                      </p>
+                      {(profile?.current_city ||
+                        profile?.current_state) && (
+                        <p className="text-xs text-muted-foreground">
+                          {profile?.current_city || ''}
+                          {profile?.current_city &&
+                          profile?.current_state
+                            ? ', '
+                            : ''}
+                          {profile?.current_state || ''}
+                        </p>
+                      )}
 
                       <p className="text-xs text-muted-foreground">
                         Plan:{' '}
@@ -252,10 +256,11 @@ export default async function RevenuePage({
                       {tx.status}
                     </Badge>
 
-                    <p className="text-xs text-muted-foreground">
-                      {tx.razorpay_payment_id ||
-                        'No Payment ID'}
-                    </p>
+                    {tx.razorpay_payment_id && (
+                      <p className="text-xs text-muted-foreground">
+                        {tx.razorpay_payment_id}
+                      </p>
+                    )}
 
                   </div>
 
