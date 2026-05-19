@@ -61,47 +61,80 @@ export async function getDashboardStats() {
       .eq('role', 'employer'),
   ])
 
+  // =========================
   // Revenue MTD
+  // =========================
+
   const startOfMonth = new Date(
     new Date().getFullYear(),
     new Date().getMonth(),
     1
   ).toISOString()
 
-  const { data: payments } = await supabase
-    .from('payment_transactions')
-    .select('amount_inr')
-    .eq('status', 'paid')
-    .gte('paid_at', startOfMonth)
+  const { data: subscriptions } =
+    await supabase
+      .from('user_subscriptions')
+      .select('amount_rupees')
+      .in('status', [
+        'active',
+        'completed',
+        'paid',
+      ])
+      .gte('created_at', startOfMonth)
 
   const revenueMTD =
-    payments?.reduce(
-      (sum, p) => sum + Number(p.amount_inr || 0),
+    subscriptions?.reduce(
+      (sum, item) =>
+        sum +
+        Number(item.amount_rupees || 0),
       0
     ) || 0
 
-  // Active users (last 7 days)
+  // =========================
+  // Active users (7 days)
+  // =========================
+
   const sevenDaysAgo = new Date(
-    Date.now() - 7 * 24 * 60 * 60 * 1000
+    Date.now() -
+      7 * 24 * 60 * 60 * 1000
   ).toISOString()
 
-  const { count: activeUsers } = await supabase
-    .from('user_profiles')
-    .select('*', { count: 'exact', head: true })
-    .gte('updated_at', sevenDaysAgo)
+  const { count: activeUsers } =
+    await supabase
+      .from('user_profiles')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .gte('updated_at', sevenDaysAgo)
 
   return {
     totalUsers: totalUsers || 0,
+
     activeUsers: activeUsers || 0,
-    totalEmployers: totalEmployers || 0,
-    totalCompanies: totalCompanies || 0,
+
+    totalEmployers:
+      totalEmployers || 0,
+
+    totalCompanies:
+      totalCompanies || 0,
+
     activeJobs: activeJobs || 0,
-    applicationsToday: applicationsToday || 0,
+
+    applicationsToday:
+      applicationsToday || 0,
+
     revenueMTD,
-    activeSubscriptions: activeSubscriptions || 0,
-    pendingReports: pendingReports || 0,
+
+    activeSubscriptions:
+      activeSubscriptions || 0,
+
+    pendingReports:
+      pendingReports || 0,
+
     pendingConstructionRequests:
-      pendingConstructionRequests || 0,
+      pendingConstructionRequests ||
+      0,
   }
 }
 
@@ -111,22 +144,33 @@ export async function getUserRegistrationTrend(
   const supabase = await createAdminClient()
 
   const startDate = new Date(
-    Date.now() - days * 24 * 60 * 60 * 1000
+    Date.now() -
+      days * 24 * 60 * 60 * 1000
   ).toISOString()
 
   const { data } = await supabase
     .from('user_profiles')
     .select('created_at')
     .gte('created_at', startDate)
-    .order('created_at', { ascending: true })
+    .order('created_at', {
+      ascending: true,
+    })
 
-  const grouped = (data || []).reduce(
-    (acc: Record<string, number>, item) => {
-      const date = new Date(item.created_at)
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
+      const date = new Date(
+        item.created_at
+      )
         .toISOString()
         .split('T')[0]
 
-      acc[date] = (acc[date] || 0) + 1
+      acc[date] =
+        (acc[date] || 0) + 1
 
       return acc
     },
@@ -147,22 +191,33 @@ export async function getJobPostingTrend(
   const supabase = await createAdminClient()
 
   const startDate = new Date(
-    Date.now() - days * 24 * 60 * 60 * 1000
+    Date.now() -
+      days * 24 * 60 * 60 * 1000
   ).toISOString()
 
   const { data } = await supabase
     .from('job_listings')
     .select('created_at')
     .gte('created_at', startDate)
-    .order('created_at', { ascending: true })
+    .order('created_at', {
+      ascending: true,
+    })
 
-  const grouped = (data || []).reduce(
-    (acc: Record<string, number>, item) => {
-      const date = new Date(item.created_at)
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
+      const date = new Date(
+        item.created_at
+      )
         .toISOString()
         .split('T')[0]
 
-      acc[date] = (acc[date] || 0) + 1
+      acc[date] =
+        (acc[date] || 0) + 1
 
       return acc
     },
@@ -183,22 +238,33 @@ export async function getApplicationsTrend(
   const supabase = await createAdminClient()
 
   const startDate = new Date(
-    Date.now() - days * 24 * 60 * 60 * 1000
+    Date.now() -
+      days * 24 * 60 * 60 * 1000
   ).toISOString()
 
   const { data } = await supabase
     .from('job_applications_listings')
     .select('applied_at')
     .gte('applied_at', startDate)
-    .order('applied_at', { ascending: true })
+    .order('applied_at', {
+      ascending: true,
+    })
 
-  const grouped = (data || []).reduce(
-    (acc: Record<string, number>, item) => {
-      const date = new Date(item.applied_at)
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
+      const date = new Date(
+        item.applied_at
+      )
         .toISOString()
         .split('T')[0]
 
-      acc[date] = (acc[date] || 0) + 1
+      acc[date] =
+        (acc[date] || 0) + 1
 
       return acc
     },
@@ -219,27 +285,43 @@ export async function getRevenueTrend(
   const supabase = await createAdminClient()
 
   const startDate = new Date(
-    Date.now() - days * 24 * 60 * 60 * 1000
+    Date.now() -
+      days * 24 * 60 * 60 * 1000
   ).toISOString()
 
   const { data } = await supabase
-    .from('payment_transactions')
-    .select('amount_inr, paid_at')
-    .eq('status', 'paid')
-    .gte('paid_at', startDate)
-    .order('paid_at', { ascending: true })
+    .from('user_subscriptions')
+    .select(`
+      amount_rupees,
+      created_at,
+      status
+    `)
+    .in('status', [
+      'active',
+      'completed',
+      'paid',
+    ])
+    .gte('created_at', startDate)
+    .order('created_at', {
+      ascending: true,
+    })
 
-  const grouped = (data || []).reduce(
-    (acc: Record<string, number>, item) => {
-      if (!item.paid_at) return acc
-
-      const date = new Date(item.paid_at)
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
+      const date = new Date(
+        item.created_at
+      )
         .toISOString()
         .split('T')[0]
 
       acc[date] =
         (acc[date] || 0) +
-        Number(item.amount_inr || 0)
+        Number(item.amount_rupees || 0)
 
       return acc
     },
@@ -265,12 +347,18 @@ export async function getJobsByCategory() {
     .eq('status', 'active')
     .gte('expires_at', now)
 
-  const grouped = (data || []).reduce(
-    (acc: Record<string, number>, item) => {
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
       const category =
         item.job_category || 'Other'
 
-      acc[category] = (acc[category] || 0) + 1
+      acc[category] =
+        (acc[category] || 0) + 1
 
       return acc
     },
@@ -297,12 +385,18 @@ export async function getTopDistricts() {
     .eq('status', 'active')
     .gte('expires_at', now)
 
-  const grouped = (data || []).reduce(
-    (acc: Record<string, number>, item) => {
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
       const district =
         item.district || 'Unknown'
 
-      acc[district] = (acc[district] || 0) + 1
+      acc[district] =
+        (acc[district] || 0) + 1
 
       return acc
     },
@@ -339,7 +433,9 @@ export async function getRecentApplications(
         company_id
       )
     `)
-    .order('applied_at', { ascending: false })
+    .order('applied_at', {
+      ascending: false,
+    })
     .limit(limit)
 
   return data || []
@@ -364,7 +460,9 @@ export async function getRecentJobs(
         logo_url
       )
     `)
-    .order('created_at', { ascending: false })
+    .order('created_at', {
+      ascending: false,
+    })
     .limit(limit)
 
   return data || []
