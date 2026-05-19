@@ -1,304 +1,240 @@
-// app/dashboard/revenue/page.tsx
+// lib/services/revenue.ts
 
-import {
-  getRevenueStats,
-  getTransactions,
-  getMonthlyRevenueTrend,
-} from '@/lib/services/revenue'
+import { createAdminClient } from '@/lib/supabase/server'
 
-import { KPICard } from '@/components/dashboard/kpi-card'
+export async function getRevenueStats() {
+  const supabase = await createAdminClient()
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+  const now = new Date()
 
-import { Badge } from '@/components/ui/badge'
+  const startOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1
+  ).toISOString()
 
-import {
-  IndianRupee,
-  TrendingUp,
-  Users,
-  CreditCard,
-} from 'lucide-react'
+  const startOfLastMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() - 1,
+    1
+  ).toISOString()
 
-import { format } from 'date-fns'
+  const endOfLastMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    0,
+    23,
+    59,
+    59
+  ).toISOString()
 
-import RevenueChart from './revenue-chart'
+  const currentTime = new Date().toISOString()
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(Number(amount || 0))
-}
-
-interface PageProps {
-  searchParams: Promise<{
-    page?: string
-  }>
-}
-
-export default async function RevenuePage({
-  searchParams,
-}: PageProps) {
-
-  const params = await searchParams
-
-  const page = parseInt(
-    params.page || '1'
-  )
+  const successfulStatuses = [
+    'active',
+    'completed',
+    'paid',
+  ]
 
   const [
-    stats,
-    { transactions },
-    revenueTrend,
+    { data: thisMonthSubscriptions },
+    { data: lastMonthSubscriptions },
+    { count: activeSubscriptions },
+    { count: totalTransactions },
   ] = await Promise.all([
-    getRevenueStats(),
-    getTransactions(page, 10),
-    getMonthlyRevenueTrend(6),
+
+    supabase
+      .from('user_subscriptions')
+      .select(`
+        amount_rupees,
+        created_at,
+        status
+      `)
+      .in('status', successfulStatuses)
+      .gte('created_at', startOfMonth),
+
+    supabase
+      .from('user_subscriptions')
+      .select(`
+        amount_rupees,
+        created_at,
+        status
+      `)
+      .in('status', successfulStatuses)
+      .gte('created_at', startOfLastMonth)
+      .lte('created_at', endOfLastMonth),
+
+    supabase
+      .from('user_subscriptions')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('status', 'active')
+      .gte('expires_at', currentTime),
+
+    supabase
+      .from('user_subscriptions')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      }),
   ])
 
-  return (
-    <div className="space-y-6">
+  const revenueMTD =
+    (thisMonthSubscriptions || []).reduce(
+      (sum, item) =>
+        sum +
+        Number(item.amount_rupees || 0),
+      0
+    )
 
-      <div>
+  const revenueLastMonth =
+    (lastMonthSubscriptions || []).reduce(
+      (sum, item) =>
+        sum +
+        Number(item.amount_rupees || 0),
+      0
+    )
 
-        <h1 className="text-2xl font-bold tracking-tight">
-          Revenue & Payments
-        </h1>
+  return {
+    revenueMTD,
 
-        <p className="text-muted-foreground">
-          Complete subscription and revenue analytics.
-        </p>
+    revenueLastMonth,
 
-      </div>
+    activeSubscriptions:
+      activeSubscriptions || 0,
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    totalTransactions:
+      totalTransactions || 0,
 
-        <KPICard
-          title="Revenue MTD"
-          value={formatCurrency(
-            stats.revenueMTD
-          )}
-          description="Current month revenue"
-          icon={IndianRupee}
-          trend={
-            stats.growthPercent !== 0
-              ? {
-                  value: Math.round(
-                    stats.growthPercent
-                  ),
-                  isPositive:
-                    stats.growthPercent > 0,
-                }
-              : undefined
-          }
-        />
+    growthPercent:
+      revenueLastMonth > 0
+        ? (
+            ((revenueMTD -
+              revenueLastMonth) /
+              revenueLastMonth) *
+            100
+          )
+        : 0,
+  }
+}
 
-        <KPICard
-          title="Last Month"
-          value={formatCurrency(
-            stats.revenueLastMonth
-          )}
-          description="Previous month"
-          icon={TrendingUp}
-        />
+export async function getTransactions(
+  page: number = 1,
+  limit: number = 10
+) {
+  const supabase = await createAdminClient()
 
-        <KPICard
-          title="Active Subscribers"
-          value={
-            stats.activeSubscriptions
-          }
-          description="Currently active"
-          icon={Users}
-        />
+  const offset = (page - 1) * limit
 
-        <KPICard
-          title="Total Transactions"
-          value={
-            stats.totalTransactions
-          }
-          description="All subscription purchases"
-          icon={CreditCard}
-        />
+  const {
+    data,
+    count,
+    error,
+  } = await supabase
+    .from('user_subscriptions')
+    .select(
+      `
+      *,
+      user_profiles(
+        full_name,
+        email,
+        mobile_number,
+        role,
+        avatar_url,
+        current_city,
+        current_state
+      )
+    `,
+      {
+        count: 'exact',
+      }
+    )
+    .order('created_at', {
+      ascending: false,
+    })
+    .range(
+      offset,
+      offset + limit - 1
+    )
 
-      </div>
+  if (error) {
+    throw error
+  }
 
-      <RevenueChart
-        revenueTrend={revenueTrend}
-      />
+  return {
+    transactions: data || [],
+    total: count || 0,
+  }
+}
 
-      <Card>
+export async function getMonthlyRevenueTrend(
+  months: number = 6
+) {
+  const supabase = await createAdminClient()
 
-        <CardHeader>
+  const startDate = new Date()
 
-          <CardTitle>
-            Recent Subscription Payments
-          </CardTitle>
+  startDate.setMonth(
+    startDate.getMonth() - months
+  )
 
-        </CardHeader>
+  const { data, error } =
+    await supabase
+      .from('user_subscriptions')
+      .select(`
+        amount_rupees,
+        created_at,
+        status
+      `)
+      .in('status', [
+        'active',
+        'completed',
+        'paid',
+      ])
+      .gte(
+        'created_at',
+        startDate.toISOString()
+      )
+      .order('created_at', {
+        ascending: true,
+      })
 
-        <CardContent>
+  if (error) {
+    throw error
+  }
 
-          <div className="space-y-4">
+  const grouped = (
+    data || []
+  ).reduce(
+    (
+      acc: Record<string, number>,
+      item
+    ) => {
+      const month = new Date(
+        item.created_at
+      ).toLocaleDateString(
+        'en-IN',
+        {
+          year: 'numeric',
+          month: 'short',
+        }
+      )
 
-            {transactions.map((tx) => {
+      acc[month] =
+        (acc[month] || 0) +
+        Number(item.amount_rupees || 0)
 
-              const profile =
-                Array.isArray(
-                  tx.user_profiles
-                )
-                  ? tx.user_profiles[0]
-                  : tx.user_profiles
+      return acc
+    },
+    {}
+  )
 
-              return (
-                <div
-                  key={tx.id}
-                  className="flex flex-col gap-4 border-b pb-4 last:border-0 last:pb-0 md:flex-row md:items-center md:justify-between"
-                >
-
-                  <div className="flex items-start gap-4 min-w-0">
-
-                    <div className="h-12 w-12 overflow-hidden rounded-full bg-muted flex-shrink-0">
-
-                      {profile?.avatar_url ? (
-
-                        <img
-                          src={
-                            profile.avatar_url
-                          }
-                          alt="avatar"
-                          className="h-full w-full object-cover"
-                        />
-
-                      ) : (
-
-                        <div className="flex h-full w-full items-center justify-center text-sm font-bold">
-                          {profile?.full_name
-                            ?.charAt(0)
-                            ?.toUpperCase() || 'U'}
-                        </div>
-
-                      )}
-
-                    </div>
-
-                    <div className="space-y-1 min-w-0">
-
-                      <p className="font-semibold truncate">
-                        {profile?.full_name ||
-                          'Unknown User'}
-                      </p>
-
-                      {profile?.email && (
-                        <p className="text-xs text-muted-foreground break-all">
-                          {profile.email}
-                        </p>
-                      )}
-
-                      {profile?.mobile_number && (
-                        <p className="text-xs text-muted-foreground">
-                          {profile.mobile_number}
-                        </p>
-                      )}
-
-                      {(profile?.current_city ||
-                        profile?.current_state) && (
-                        <p className="text-xs text-muted-foreground">
-                          {profile?.current_city || ''}
-                          {profile?.current_city &&
-                          profile?.current_state
-                            ? ', '
-                            : ''}
-                          {profile?.current_state || ''}
-                        </p>
-                      )}
-
-                      <p className="text-xs text-muted-foreground">
-                        Plan:{' '}
-                        {tx.plan_name || 'N/A'}
-                      </p>
-
-                      <p className="text-xs text-muted-foreground">
-                        Platform:{' '}
-                        {tx.platform || 'N/A'}
-                      </p>
-
-                      <p className="text-xs text-muted-foreground">
-
-                        Purchased:{' '}
-
-                        {tx.created_at
-                          ? format(
-                              new Date(
-                                tx.created_at
-                              ),
-                              'PPpp'
-                            )
-                          : 'N/A'}
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <div className="text-left md:text-right space-y-2">
-
-                    <p className="text-lg font-bold">
-
-                      {formatCurrency(
-                        Number(
-                          tx.amount_rupees || 0
-                        )
-                      )}
-
-                    </p>
-
-                    <Badge
-                      variant={
-                        tx.status === 'active'
-                          ? 'default'
-                          : tx.status === 'pending'
-                            ? 'secondary'
-                            : tx.status === 'expired'
-                              ? 'outline'
-                              : 'destructive'
-                      }
-                    >
-                      {tx.status || 'unknown'}
-                    </Badge>
-
-                    {tx.razorpay_payment_id && (
-                      <p className="text-xs text-muted-foreground break-all">
-                        {tx.razorpay_payment_id}
-                      </p>
-                    )}
-
-                  </div>
-
-                </div>
-              )
-            })}
-
-            {transactions.length === 0 && (
-
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No subscription payments found
-              </p>
-
-            )}
-
-          </div>
-
-        </CardContent>
-
-      </Card>
-
-    </div>
+  return Object.entries(grouped).map(
+    ([month, revenue]) => ({
+      month,
+      revenue,
+    })
   )
 }
